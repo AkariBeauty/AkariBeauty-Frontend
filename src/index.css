@@ -1,9 +1,19 @@
 @import "tailwindcss";
 
-:root {
-    --color-mint-500: #fcba03;
+@theme {
+    --color-primary: #ffffff; /* Marrom no modo claro */
+    --color-background: #ffffff; /* Fundo claro */
+    --color-text: #000000; /* Texto preto */
 }
 
-.dark {
-    --color-mint-500: #6d5103;
+[data-theme="dark"] {
+    --color-primary: #6d5103; /* Marrom no modo escuro */
+    --color-background: #1a1a1a; /* Fundo escuro */
+    --color-text: #ffffff; /* Texto branco */
 }
+
+[data-theme="red"] {
+    --color-primary: red; /* Marrom no modo escuro */
+    --color-background: #1a1a1a; /* Fundo escuro */
+    --color-text: #ffffff; /* Texto branco */
+  }
