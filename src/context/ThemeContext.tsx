@@ -33,7 +33,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         } else {
             setTheme('default');
         }
-        
+
             document.documentElement.setAttribute('data-theme', theme);
     };
 
