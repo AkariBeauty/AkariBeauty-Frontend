@@ -4,6 +4,7 @@ import Logo from "../../assets/logo.png"
 import FormLogin from "./login"
 import SignupCliente from "./singupCliente"
 import SignupEmpresa from "./singupEmpresa"
+import Button from "../../components/Button"
 
 export default function Login() {
     const [loginSingup, setLoginSingup] = useState('login')
@@ -31,7 +32,7 @@ export default function Login() {
             elemento[0].classList.remove("translate-x-[150%]", "opacity-0");
             elemento[1].classList.remove("translate-x-[-150%]", "opacity-0");
         }, 50);
-        }, []);
+        }, []); 
 
     return (
         <div className="flex bg-backgound-alt h-screen flex-row items-center justify-center">
@@ -55,25 +56,12 @@ export default function Login() {
                     {loginSingup === "login" ? (
                         <div className="flex flex-row items-center justify-center space-x-4 w-full">
                             <div>
-                                <button
-                                type="button"
-                                onClick={() => alterLoginSingup("empresa")}
-                                className="p-2.5 px-3.5 rounded-lg bg-primary text-2xl text-textSecondary font-bold cursor-pointer flex flex-row items-center justify-center flex-1/2 "
-                                >
-                                <SignIn size={28} weight="bold" className="mr-[10px]" />
-                                SIGNUP EMPRESA
-                                </button>
+
+                                <Button label="SINGUP EMPRESA" icon={<SignIn size={28} weight="bold" className="mr-[10px]" />} background="bg-primary" color="text-textSecondary" size="text-2xl" action={() => alterLoginSingup("empresa")}/>
                             </div>
 
                             <div>
-                                <button
-                                type="button"
-                                onClick={() => alterLoginSingup("cliente")}
-                                className="p-2.5 px-3.5 rounded-lg bg-primary text-2xl text-textSecondary font-bold cursor-pointer flex flex-row items-center justify-center flex-1/2"
-                                >
-                                <SignIn size={28} weight="bold" className="mr-[10px]" />
-                                LOGIN USUÁRIO
-                                </button>
+                                <Button label="SINGUP USUÁRIO" icon={<SignIn size={28} weight="bold" className="mr-[10px]" />} background="bg-primary" color="text-textSecondary" size="text-2xl" action={() => alterLoginSingup("cliente")}/>
                             </div>
                         </div>
                         ) : (
