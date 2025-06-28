@@ -6,18 +6,20 @@ import InputLogin from "../../components/InputLogin";
 import BaseService from "../../services/Generic/BaseService";
 import AlertModal from "../../components/AlertModal";
 
-type UserType = "cliente" | "profissional" | "empresa" | "usuario" | null;
+type UserType = "cliente" | "profissional" | "empresa" | "usuario";
 
 export default function FormLogin() {
+
     const navigate = useNavigate();
 
-    const [typeUser, setTypeUser] = useState<UserType>(null);
+    const [typeUser, setTypeUser] = useState<UserType>("cliente");
     const [login, setLogin] = useState("");
     const [password, setPassword] = useState("");
     const [modalError, setModalError] = useState(false);
 
     // Create the service instance only when needed, e.g., in a function
     const loginSevice = () => {
+
         const service = new BaseService({
             method: "patch",
             url: typeUser + "/login",
@@ -32,6 +34,7 @@ export default function FormLogin() {
         service.request().then((response) => {
             if (response.success === 200) {
                 localStorage.setItem("token", response.data);
+                localStorage.setItem("typeUser", typeUser);
                 navigate("/home");
                 return;
             }

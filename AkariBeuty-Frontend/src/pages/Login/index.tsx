@@ -5,11 +5,22 @@ import FormLogin from "./login"
 import SignupCliente from "./singupCliente"
 import SignupEmpresa from "./singupEmpresa"
 import Button from "../../components/Button"
+import { useNavigate } from "react-router-dom"
 
 export default function Login() {
+    
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (localStorage.getItem("token") || localStorage.getItem("typeUser")) {
+            navigate("/home");
+        }
+    }, []);
+
     const [loginSingup, setLoginSingup] = useState('login')
 
     function alterLoginSingup(text: string) {
+
         const elemento = document.querySelectorAll(".login")
 
 
@@ -32,7 +43,7 @@ export default function Login() {
             elemento[0].classList.remove("translate-x-[150%]", "opacity-0");
             elemento[1].classList.remove("translate-x-[-150%]", "opacity-0");
         }, 50);
-        }, []); 
+        }, []);
 
     return (
         <div className="flex bg-backgound-alt h-screen flex-row items-center justify-center">

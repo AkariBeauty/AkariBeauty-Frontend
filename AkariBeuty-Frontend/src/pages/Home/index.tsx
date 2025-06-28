@@ -1,26 +1,34 @@
-import { useState } from 'react';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Empresa from "../Empresa";
 
 export default function Home() {
-    const [trocar, setTrocar] = useState(false);
+    const navigate = useNavigate();
+    useEffect(() => {
+        if (!localStorage.getItem("token") || !localStorage.getItem("typeUser")) {
+            navigate("/login");
+        }
+    }, []);
 
-    return (
-    <div className="relative w-[200px] h-[100px]">
-        <div
-        className={`absolute w-20 h-20 bg-red-500 transition-transform duration-500 ${
-            trocar ? 'translate-x-[100px]' : 'translate-x-0'
-        }`}
-        />
-        <div
-        className={`absolute w-20 h-20 bg-blue-500 transition-transform duration-500 ${
-            trocar ? 'translate-x-0' : 'translate-x-[100px]'
-        }`}
-        />
-        <button
-        onClick={() => setTrocar(!trocar)}
-        className="absolute top-[90px] left-0 bg-black text-white px-2 rounded"
-        >
-        Trocar
-        </button>
-    </div>
-    );
+    let typeUser = localStorage.getItem("typeUser");
+
+    if (!typeUser) {
+        return <h1>Home</h1>;
+    }
+
+    if (typeUser === "empresa") {
+        return <Empresa />;
+    }
+
+    if (typeUser === "cliente") {
+        return <h1>Cliente</h1>;
+    }
+
+    if (typeUser === "profissional") {
+        return <h1>Funcionario</h1>;
+    }
+
+    if (typeUser === "usuario") {
+        return <h1>Usuario</h1>;
+    }
 }

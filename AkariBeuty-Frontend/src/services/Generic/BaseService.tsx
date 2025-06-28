@@ -4,19 +4,18 @@ import ServiceResult from "../../types/ServiceResult";
 interface Config {
     method: Methods;
     url: string;
-    data: any | null;
+    data?: any | null;
     auth: boolean | null;
-    headers: Record<string, string> | null;
+    headers?: Record<string, string> | null;
 }
 
 type Methods = "get" | "post" | "put" | "delete" | "patch";
 
 const urlBase = "http://localhost:8080/api/v1/"
 
-
 export default class BaseService {
     protected config;
-    constructor({method, url, data = null, auth = false, headers = null}: Config) {
+    constructor ({method, url, data = null, auth = false, headers = null}: Config) {
 
         let cabeca: Record<string, string> = {};
 
@@ -29,9 +28,7 @@ export default class BaseService {
 
         if (headers)
         {
-            for (const [key, value] of Object.entries(headers)) {
-                cabeca[key] = value;
-            }
+
         }
 
         this.config = {
