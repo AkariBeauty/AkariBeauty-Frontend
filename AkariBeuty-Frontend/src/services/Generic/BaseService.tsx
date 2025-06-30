@@ -4,6 +4,7 @@ import ServiceResult from "../../types/ServiceResult";
 interface Config {
     method: Methods;
     url: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: any | null;
     auth: boolean | null;
     headers: Record<string, string> | null;
