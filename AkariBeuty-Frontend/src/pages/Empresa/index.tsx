@@ -18,7 +18,7 @@ export default function Empresa() {
     }, []);
 
     function getNameUser() {
-        const service = new BaseService({
+        const service = BaseService({
             method: "get",
             url: "empresa/user",
             auth: true,

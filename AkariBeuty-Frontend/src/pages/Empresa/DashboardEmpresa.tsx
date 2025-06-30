@@ -38,36 +38,46 @@ export default function DashboardEmpresa() {
 
   const [FaturamentoDia, setFaturamentoDia] = useState(0);
   const [PorcentagemFaturamento, setPorcentegemFaturamento] = useState(0);
+
   const [agendamentos, setAgendamentos] = useState(0);
   const [agendametnosConcluidos, setAgendamentosConcluidos] = useState(0);
+
+  const [clienteNovoMes, setClienteNovoMes] = useState(0);
+  const [clienteNovoSemana, setClienteNovoSemana] = useState(0);
 
   useEffect(() => {
 
     const data = new Date(2025, 5, 27);
-    const mes = data.getMonth() + 1;
-    const ano = data.getFullYear();
-    const dia = data.getDate();
-    const semana = getWeekOfMonthFromParts(ano, mes, dia);
 
     const dataOld = new Date();
     dataOld.setDate(data.getDate() - 1);
-    const diaOld = dataOld.getDate();
-    const mesOld = dataOld.getMonth() + 1;
-    const anoOld = dataOld.getFullYear();
-    const semanaOld = getWeekOfMonthFromParts(anoOld, mesOld, diaOld);
 
-    const server = new BaseService({
-        method: "get", url : `agendamento/filtrar?Ano=${ano}&Mes=${mes}&Dia=${dia}`, auth : true
+    const dataSemana = new Date();
+    dataSemana.setDate(data.getDate() - data.getDay());
+
+
+    const server = BaseService({
+        method: "get", url : `agendamento/filtrar?Ano=${data.getFullYear()}&Mes=${data.getMonth() + 1}&Dia=${data.getDate()}`, auth : true
     });
 
-    const serverOld = new BaseService({
-        method: "get", url : `agendamento/filtrar?Ano=${anoOld}&Mes=${mesOld}&Dia=${diaOld}`, auth : true
+    const serverOld = BaseService({
+        method: "get", url : `agendamento/filtrar?Ano=${dataOld.getFullYear()}&Mes=${dataOld.getMonth() + 1}&Dia=${dataOld.getDate()}`, auth : true
     });
+
+    const cnms = BaseService({
+        method: "get", url : `empresa/novos-clientes?data=${data.getFullYear()}-${data.getMonth() + 1}-01`, auth : true
+    })
+
+    const cnss = BaseService({
+        method: "get", url : `empresa/novos-clientes?data=${dataSemana.getFullYear()}-${dataSemana.getMonth() + 1}-${dataSemana.getDate()}`, auth : true
+    })
 
     async function fetchData() {
         try {
             const response = await server.request();
             const responseOld = await serverOld.request();
+            const cnm = await cnms.request();
+            const cns = await cnss.request();
 
             if (response.success === 200) {
 
@@ -87,7 +97,7 @@ export default function DashboardEmpresa() {
                 if (responseOld.success === 200) {
                     let totalOld = 0;
                     responseOld.data.forEach((item: any) => {
-                        if (item.statusAgendamento === "6")
+                        if (item.statusAgendamento === 6)
                         {
                             totalOld += item.valor;
                         }
@@ -102,11 +112,14 @@ export default function DashboardEmpresa() {
                             porcentagem = 100;
                         }
 
-
                         setAgendamentos(agendamentos);
                         setAgendamentosConcluidos(agendamentosConcluidos);
+
                         setFaturamentoDia(total);
                         setPorcentegemFaturamento(porcentagem);
+
+                        setClienteNovoMes(cnm.data);
+                        setClienteNovoSemana(cns.data);
 
                     };
 
@@ -114,9 +127,9 @@ export default function DashboardEmpresa() {
 
 
                 }
-            } else {
             }
         } catch (error) {
+
         }
     }
 
@@ -146,10 +159,10 @@ export default function DashboardEmpresa() {
           />
           <KPICard
             title="Novos Clientes (Mês)"
-            value="23"
+            value={`${clienteNovoMes}`}
             icon={UserPlus}
-            trend="+5 esta semana"
-            trendColor="green"
+            trend={`${clienteNovoSemana ? `+${clienteNovoSemana}` : 0} esta semana`}
+            trendColor={clienteNovoSemana > 0 ? 'green' : 'gray'}
           />
           <KPICard
             title="Taxa de Ocupação"

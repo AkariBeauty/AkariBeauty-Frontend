@@ -13,7 +13,11 @@ type Methods = "get" | "post" | "put" | "delete" | "patch";
 
 const urlBase = "http://localhost:8080/api/v1/"
 
-export default class BaseService {
+export default function BaseService({method, url, data = null, auth = false, headers = null}: Config) {
+    return new BaseServiver({method, url, data, auth, headers});
+}
+
+class BaseServiver {
     protected config;
     constructor ({method, url, data = null, auth = false, headers = null}: Config) {
 
