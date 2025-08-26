@@ -1,135 +1,65 @@
 /* src/index.css */
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* SEU BLOCO @theme EXISTENTE - MANTIDO INTACTO */
 @theme {
-    --color-background: #ffffff; /* Fundo claro */
-    --color-backgound-alt: #e5e7eb; /* Fundo claro alternativo */
-    --color-primary: #Fd7e93; /* Rosa Claro*/
+    --color-background: #ffffff;
+    --color-backgound-alt: #e5e7eb;
+    --color-primary: #Fd7e93;
 
-    --color-textPrimary: #000000; /* Preto */
-    --color-textSecondary: #ffffff; /* Cinza */
-    --color-textTertiary: #4b5563; /* Cinza claro */
-    --color-textQuaternary: #9ca3af; /* Branco */
+    --color-textPrimary: #000000;
+    --color-textSecondary: #ffffff;
+    --color-textTertiary: #4b5563;
+    --color-textQuaternary: #9ca3af;
 }
 
+/* SUAS REGRAS data-theme EXISTENTES - MANTIDAS INTACTAS */
 [data-theme="dark"] {
-    --color-background: #1a1a1a; /* Fundo escuro */
+    --color-background: #1a1a1a;
 }
-
 [data-theme="red"] {
-    --color-background: #1a1a1a; /* Fundo escuro */
+    --color-background: #1a1a1a;
 }
 
 /* SUAS REGRAS GLOBAIS EXISTENTES - MANTIDAS INTACTAS */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  margin: 0; padding: 0; box-sizing: border-box;
 }
-
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--color-background); /* Usará sua cor de fundo original */
+  background-color: var(--color-background);
   min-height: 100vh;
 }
 
-
+/* INÍCIO DAS CLASSES CUSTOMIZADAS DO PROJETO BOLT.NEW - ADICIONAR AQUI NO FINAL */
 /* Scrollbar personalizada */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f5f9; /* 'bt-neutral-100' */
-}
-
-::-webkit-scrollbar-thumb {
-  background: #ec4899; /* 'bt-primary-500' */
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #db2777; /* 'bt-primary-600' */
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #ec4899; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #db2777; }
 
 /* Animações customizadas */
-.gradient-bg {
-  background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #d946ef 100%);
-}
-
-.glass-effect {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.card-hover {
-  transition: all 0.3s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
+.gradient-bg { background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #d946ef 100%); }
+.glass-effect { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18); }
+.card-hover { transition: all 0.3s ease; }
+.card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
 
 /* Inputs customizados */
-.input-focus {
-  transition: all 0.2s ease;
-}
-
-.input-focus:focus {
-  border-color: #ec4899; /* 'bt-primary-500' */
-  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
-}
+.input-focus { transition: all 0.2s ease; }
+.input-focus:focus { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1); }
 
 /* Botões com efeito */
-.btn-primary {
-  background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
-  transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #db2777 0%, #9333ea 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
+.btn-primary { background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%); transition: all 0.3s ease; }
+.btn-primary:hover { background: linear-gradient(135deg, #db2777 0%, #9333ea 100%); transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
 
 /* Wizard steps */
-.wizard-step {
-  position: relative;
-}
-
-.wizard-step::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: -50%;
-  width: 100%;
-  height: 2px;
-  background: #e5e7eb; /* 'bt-neutral-200' */
-  transform: translateY(-50%);
-}
-
-.wizard-step.completed::after {
-  background: #ec4899; /* 'bt-primary-500' */
-}
-
-.wizard-step:last-child::after {
-  display: none;
-}
+.wizard-step { position: relative; }
+.wizard-step::after { content: ''; position: absolute; top: 50%; right: -50%; width: 100%; height: 2px; background: #e5e7eb; transform: translateY(-50%); }
+.wizard-step.completed::after { background: #ec4899; }
+.wizard-step:last-child::after { display: none; }
 
 /* Animação para slide-up (usado no DateTimeSelection) */
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up {
-  animation: slideUp 0.5s ease-out forwards;
-}
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slide-up { animation: slideUp 0.5s ease-out forwards; }

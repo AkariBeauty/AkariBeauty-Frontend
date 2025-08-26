@@ -1,22 +1,22 @@
 // src/routes.tsx
-import React from 'react'; // Certifique-se de que o React está importado
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 // **SUAS IMPORTAÇÕES ORIGINAIS (MANTIDAS)**
 import Home from "./pages/Home";
-import Login from "./pages/Login"; // Seu componente Login original, mantido
+import Login from "./pages/Login";
 
 // **NOVAS IMPORTAÇÕES DO MÓDULO CLIENTE (ACRESCENTADAS)**
-import { AuthProvider, useAuth } from './contexts/AuthContext'; // O provedor de autenticação
-import ClientLayout from './components/Layout/ClientLayout'; // O layout principal para o cliente
-import BoltLogin from './pages/Auth/LoginClient'; // O componente de Login do Cliente
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import ClientLayout from './components/Layout/ClientLayout';
+import BoltLogin from './pages/Auth/LoginClient';
 import Dashboard from './pages/Client/Dashboard';
 import BookingWizard from './pages/Client/Booking/BookingWizard';
 import Appointments from './pages/Client/Appointments';
 import Profile from './pages/Client/Profile';
-import LoadingSpinner from './components/UI/LoadingSpinner'; // O spinner para rotas protegidas/públicas
+import LoadingSpinner from './components/UI/LoadingSpinner';
 
-// Componente auxiliar para rotas protegidas (para as novas rotas do cliente)
+// Componente auxiliar para rotas protegidas
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
 
@@ -28,10 +28,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  return user ? <>{children}</> : <Navigate to="/login-bolt" replace />; // Redireciona para o login do Bolt.new
+  return user ? <>{children}</> : <Navigate to="/login-bolt" replace />;
 };
 
-// Componente auxiliar para rotas públicas (do Bolt.new, que precisam de um login específico)
+// Componente auxiliar para rotas públicas
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
 
@@ -46,49 +46,28 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return user ? <Navigate to="/dashboard" replace /> : <>{children}</>;
 };
 
-
-export default function Routers() { // Mantido o nome original "Routers"
+export default function Routers() {
   return (
-    <AuthProvider> {/* O provedor de autenticação deve envolver todas as rotas que o utilizam */}
+    <AuthProvider>
       <Router>
         <Routes>
-          {/* **SUAS ROTAS ORIGINAIS (MANTIDAS INTACTAS)** */}
+          {/* **ROTAS PÚBLICAS (SEM AUTENTICAÇÃO)** */}
           <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/login-bolt" element={<PublicRoute><BoltLogin /></PublicRoute>} />
 
-          {/* **NOVAS ROTAS DO MÓDULO CLIENTE (ACRESCENTADAS)** */}
-
-          {/* Rota de Login para o módulo cliente (com um novo path para não conflitar com seu /login original) */}
-          <Route
-            path="/login-bolt" // Novo PATH para o Login do Bolt.new
-            element={
-              <PublicRoute>
-                <BoltLogin /> {/* Usando o Login do Bolt.new */}
-              </PublicRoute>
-            }
-          />
-
-          {/* Rotas Protegidas do Módulo Cliente (exigem autenticação do AuthProvider) */}
-          {/* Note que o path aqui é "/cliente", você pode mudar se quiser que seja direto na raiz após o login */}
-          <Route
-            path="/" // Esta rota agora será o ponto de entrada para o ClientLayout após autenticação
-            element={
-              <ProtectedRoute>
-                <ClientLayout />
-              </ProtectedRoute>
-            }
-          >
-            {/* Página inicial do cliente após o login: redireciona para /dashboard */}
-            <Route index element={<Navigate to="/dashboard" replace />} /> {/* Agora o index vai para /dashboard se logado */}
+          {/* **ROTAS PROTEGIDAS (COM AUTENTICAÇÃO)** */}
+          <Route path="/cliente" element={<ProtectedRoute><ClientLayout /></ProtectedRoute>}>
+            <Route index element={<Navigate to="/cliente/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="booking" element={<BookingWizard />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="profile" element={<Profile />} />
           </Route>
 
-          {/* Rota Coringa para qualquer caminho não correspondido - pode ser ajustada se necessário */}
-          {/* Ela vai redirecionar para /login-bolt se não houver rota específica e o usuário não estiver logado */}
-          <Route path="*" element={<Navigate to="/login-bolt" replace />} />
+          {/* **ROTA CORINGA - REDIRECIONA PARA HOME** */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
