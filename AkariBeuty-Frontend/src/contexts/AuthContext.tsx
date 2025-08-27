@@ -56,26 +56,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
 
     try {
-      // --- SIMULAÇÃO DE LOGIN COM DADOS MOCKADOS ---
+      // --- SIMULAÇÃO DE LOGIN COM DADOS REAIS DO BANCO ---
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simula delay da API
 
-      if (email === 'usuario@akari.com' && password === '123456') {
+      // Credenciais reais do banco de dados (baseado no pgAdmin)
+      const validCredentials = [
+        { login: 'marcos', password: 'abcd', name: 'Marcos Oliveira', phone: '(21) 98765-4321' },
+        { login: 'ana.costa', password: 'senha123', name: 'Ana Costa', phone: '(31) 99876-5432' },
+        { login: 'joana@gmail.com', password: '1234', name: 'Joana Silva', phone: '(11) 91234-5678' }
+      ];
+
+      const userCredential = validCredentials.find(
+        cred => cred.login === email && cred.password === password
+      );
+
+      if (userCredential) {
         const userData: User = {
-          id: '1',
-          name: 'Maria Silva',
+          id: Date.now().toString(), // ID temporário
+          name: userCredential.name,
           email: email,
-          phone: '(11) 99653-3540'
+          phone: userCredential.phone
         };
         setUser(userData);
         localStorage.setItem('akari_user', JSON.stringify(userData));
-        console.log('AuthProvider: Login bem-sucedido (mocked)');
+        console.log('AuthProvider: Login bem-sucedido com credenciais reais');
         return true;
       }
 
-      console.log('AuthProvider: Credenciais inválidas (mocked)');
+      console.log('AuthProvider: Credenciais inválidas');
       return false;
     } catch (error) {
-      console.error('AuthProvider: Erro no login (mocked):', error);
+      console.error('AuthProvider: Erro no login:', error);
       return false;
     } finally {
       setIsLoading(false);

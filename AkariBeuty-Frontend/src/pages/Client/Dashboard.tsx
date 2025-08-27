@@ -66,7 +66,7 @@ const Dashboard: React.FC = () => {
       {/* Ações rápidas */}
       <div className="grid grid-cols-2 gap-4">
         <button
-          onClick={() => navigate('/booking')}
+          onClick={() => navigate('/cliente/booking')}
           className="bg-gradient-to-br from-bolt-primary-500 to-bolt-secondary-500 text-white p-6 rounded-2xl card-hover shadow-lg" // RENOMEADO AQUI
         >
           <Calendar size={32} className="mb-3" />
@@ -75,7 +75,7 @@ const Dashboard: React.FC = () => {
         </button>
 
         <button
-          onClick={() => navigate('/appointments')}
+          onClick={() => navigate('/cliente/appointments')}
           className="bg-white p-6 rounded-2xl card-hover shadow-sm border border-bolt-neutral-100" // RENOMEADO AQUI
         >
           <Clock size={32} className="text-bolt-primary-500 mb-3" /> {/* RENOMEADO AQUI */}
@@ -89,7 +89,7 @@ const Dashboard: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-bolt-neutral-900">Próximos Agendamentos</h2> {/* RENOMEADO AQUI */}
           <button
-            onClick={() => navigate('/appointments')}
+            onClick={() => navigate('/cliente/appointments')}
             className="text-bolt-primary-600 text-sm font-medium flex items-center" // RENOMEADO AQUI
           >
             Ver todos <ArrowRight size={16} className="ml-1" />

@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom"
 import LoginTabs from "../../components/LoginTabs";
 import { useState } from "react";
 import InputLogin from "../../components/InputLogin";
-import BaseService from "../../services/Generic/BaseService";
 import AlertModal from "../../components/AlertModal";
+import BaseService from "../../services/Generic/BaseService";
 
 type UserType = "cliente" | "profissional" | "empresa" | "usuario" | null;
 
@@ -16,38 +16,51 @@ export default function FormLogin() {
     const [password, setPassword] = useState("");
     const [modalError, setModalError] = useState(false);
 
-    // Create the service instance only when needed, e.g., in a function
-    const loginSevice = () => {
-        const service = new BaseService({
-            method: "patch",
-            url: typeUser + "/login",
-            data: {
-                "login" : login,
-                "password" : password
-            },
-            auth: false,
-            headers: null
-        });
+    const loginService = async () => {
+        if (!typeUser) {
+            setModalError(true);
+            return;
+        }
 
-        service.request().then((response) => {
-            if (response.success === 200) {
-                localStorage.setItem("token", response.data);
-                navigate("/home");
+        try {
+            const service = new BaseService({
+                method: "patch",
+                url: `${typeUser}/login`,
+                data: { login, password },
+                auth: false,
+                headers: null
+            });
+
+            const response = await service.request();
+            if (response.success === 200 && response.data) {
+                // Ajuste conforme o contrato do seu backend
+                const token = typeof response.data === 'string' ? response.data : (response.data.token || response.data.accessToken);
+                if (token) {
+                    localStorage.setItem("akari_token", token);
+                }
+
+                // Persistir um mínimo de info do usuário para o AuthProvider carregar
+                localStorage.setItem("akari_user", JSON.stringify({
+                    id: "local",
+                    name: login,
+                    email: login,
+                    phone: ""
+                }));
+
+                // Forçar recarregar para AuthProvider ler o localStorage imediatamente
+                const target = typeUser === "cliente" ? "/cliente/dashboard" : "/home";
+                window.location.href = target;
                 return;
             }
+        } catch (err) {
+            // silencioso, cai no modal
+        }
 
-            setModalError(true);
-            const loginElement = document.getElementById("login") as HTMLInputElement | null;
-            const passwordElement = document.getElementById("password") as HTMLInputElement | null;
-
-            if (loginElement) {
-                loginElement.value = "";
-            }
-            if (passwordElement) {
-                passwordElement.value = "";
-            }
-
-        })
+        setModalError(true);
+        const loginElement = document.getElementById("login") as HTMLInputElement | null;
+        const passwordElement = document.getElementById("password") as HTMLInputElement | null;
+        if (loginElement) loginElement.value = "";
+        if (passwordElement) passwordElement.value = "";
     };
 
     const tabs = [
@@ -58,7 +71,6 @@ export default function FormLogin() {
     ];
 
     return (
-
         <div className="flex flex-col w-full h-full justify-evenly text-center justify-items-center mt-[3%] mb-[5%]">
             <div className="text-center flex flex-col mt-[5%]">
                 <span className="text-4xl font-bold ">Bem-vindo</span>
@@ -70,21 +82,40 @@ export default function FormLogin() {
             </div>
 
             <div className="p-10 w-full text-start flex flex-col gap-10">
+                <InputLogin 
+                    id="login" 
+                    action={(text) => setLogin(text)} 
+                    label="Email" 
+                    type="text" 
+                    placeholder="your@example.com" 
+                    icon={<Envelope size={32} className="text-primary" />}
+                />
 
-                <InputLogin id="login" action={(text) => setLogin(text)} label="Email" type="text" placeholder="your@example.com" icon={<Envelope size={32} className="text-primary" />}/>
+                <InputLogin 
+                    id="password" 
+                    action={(text) => setPassword(text)} 
+                    label="Senha" 
+                    type="password" 
+                    placeholder="Insira sua senha..." 
+                    icon={<Key size={32} className="text-primary"/>}
+                />
 
-                <InputLogin id="password" action={(text) => setPassword(text)} label="Senha" type="password" placeholder="Insira sua senha..." icon={<Key size={32} className="text-primary"/>}/>
-
-                <div className="w-full"><a className="underline text-[16px]" href="#">Esqueci minha senha!</a></div>
-
+                <div className="w-full">
+                    <a className="underline text-[16px]" href="#">Esqueci minha senha!</a>
+                </div>
             </div>
 
             <div className="w-full flex flex-row justify-center">
-                {/* <Button label={"LOG IN"} icon={<SignIn size={28} weight="bold" className="mr-[10px]"/>} action={() => loginSevice()} /> */}
-                <button onClick={() => loginSevice()} className="p-2.5 px-3.5 rounded-lg bg-primary text-2xl text-textSecondary font-bold cursor-pointer flex flex-row items-center " type="button"><SignIn size={28} weight="bold" className="text-center"/> LOG IN</button>
+                <button 
+                    onClick={loginService} 
+                    className="p-2.5 px-3.5 rounded-lg bg-primary text-2xl text-textSecondary font-bold cursor-pointer flex flex-row items-center" 
+                    type="button"
+                >
+                    <SignIn size={28} weight="bold" className="text-center mr-2"/> LOG IN
+                </button>
             </div>
 
-            <AlertModal isOpen={modalError} show={setModalError} message="Email ou senha inválidos!" />
+            <AlertModal isOpen={modalError} show={setModalError} message="Email ou senha inválidos!" />
         </div>
     );
 }

@@ -34,6 +34,13 @@ body {
 }
 
 /* INÍCIO DAS CLASSES CUSTOMIZADAS DO PROJETO BOLT.NEW - ADICIONAR AQUI NO FINAL */
+
+/* Garantir que a tela não fique branca */
+body {
+  background-color: #ffffff;
+  color: #000000;
+}
+
 /* Scrollbar personalizada */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }

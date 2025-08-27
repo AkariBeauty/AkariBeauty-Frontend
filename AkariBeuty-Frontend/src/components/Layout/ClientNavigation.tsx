@@ -5,10 +5,10 @@ import { House, Calendar, ClockCounterClockwise, User } from '@phosphor-icons/re
 
 const ClientNavigation: React.FC = () => {
   const navItems = [
-    { icon: House, label: 'Início', path: '/dashboard' },
-    { icon: Calendar, label: 'Agendar', path: '/booking' },
-    { icon: ClockCounterClockwise, label: 'Agendamentos', path: '/appointments' },
-    { icon: User, label: 'Perfil', path: '/profile' },
+    { icon: House, label: 'Início', path: '/cliente/dashboard' },
+    { icon: Calendar, label: 'Agendar', path: '/cliente/booking' },
+    { icon: ClockCounterClockwise, label: 'Agendamentos', path: '/cliente/appointments' },
+    { icon: User, label: 'Perfil', path: '/cliente/profile' },
   ];
 
   return (

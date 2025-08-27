@@ -9,7 +9,6 @@ import Login from "./pages/Login";
 // **NOVAS IMPORTAÇÕES DO MÓDULO CLIENTE (ACRESCENTADAS)**
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ClientLayout from './components/Layout/ClientLayout';
-import BoltLogin from './pages/Auth/LoginClient';
 import Dashboard from './pages/Client/Dashboard';
 import BookingWizard from './pages/Client/Booking/BookingWizard';
 import Appointments from './pages/Client/Appointments';
@@ -55,7 +54,7 @@ export default function Routers() {
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/login-bolt" element={<PublicRoute><BoltLogin /></PublicRoute>} />
+          <Route path="/login-bolt" element={<PublicRoute><Login /></PublicRoute>} />
 
           {/* **ROTAS PROTEGIDAS (COM AUTENTICAÇÃO)** */}
           <Route path="/cliente" element={<ProtectedRoute><ClientLayout /></ProtectedRoute>}>
