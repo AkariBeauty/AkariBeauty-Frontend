@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await api.patch('/Cliente/login', {
         Login: email,
-        Senha: password,
+        Password: password,
       });
 
       if (response.status === 200 && response.data && response.data.token) {

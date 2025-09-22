@@ -42,8 +42,8 @@ export default function FormLogin() {
             
             // Chamada para sua API web existente
             const response = await api.patch(`/${typeUser}/login`, {
-                login: login,
-                senha: password
+                Login: login,
+                Password: password
             });
 
             console.log('Resposta da API:', response);

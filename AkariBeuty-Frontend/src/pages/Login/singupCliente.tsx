@@ -40,7 +40,7 @@ export default function SingupCliente() {
         try {
             console.log('Tentando cadastrar cliente:', formData);
             
-            const response = await api.post('/cliente/cadastro', formData);
+            const response = await api.post('/cliente', formData);
             
             console.log('Resposta do cadastro:', response);
             
