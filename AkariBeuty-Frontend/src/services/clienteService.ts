@@ -1,4 +1,5 @@
 import api from './api';
+import { Service, Professional } from '../types';
 
 export interface ClienteStats {
   totalAgendamentos: number;
@@ -41,7 +42,7 @@ export interface ClienteFavoriteService {
 export interface ClienteProfile {
   id: string;
   name: string;
-  login: string;
+  email: string;
   phone: string;
   memberSince: string;
   totalAppointments: number;
@@ -135,7 +136,7 @@ export const clienteService = {
   },
 
   // Agendamento de Novos Serviços
-  async getAvailableServices(): Promise<ClienteCadastroResponse[]> {
+  async getAvailableServices(): Promise<Service[]> {
     try {
       const response = await api.get('/cliente/servicos/disponiveis');
       return response.data;
@@ -145,7 +146,7 @@ export const clienteService = {
     }
   },
 
-  async getAvailableProfessionals(serviceId: string): Promise<ClienteCadastroResponse[]> {
+  async getAvailableProfessionals(serviceId: string): Promise<Professional[]> {
     try {
       const response = await api.get(`/cliente/servicos/${serviceId}/profissionais`);
       return response.data;
@@ -155,7 +156,7 @@ export const clienteService = {
     }
   },
 
-  async getAvailableSlots(serviceId: string, professionalId: string, date: string): Promise<ClienteCadastroResponse[]> {
+  async getAvailableSlots(serviceId: string, professionalId: string, date: string): Promise<string[]> {
     try {
       const response = await api.get(`/cliente/servicos/${serviceId}/profissionais/${professionalId}/horarios`, {
         params: { date }

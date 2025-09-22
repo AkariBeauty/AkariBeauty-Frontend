@@ -31,7 +31,7 @@ const Profile: React.FC = () => {
   const [userStats, setUserStats] = useState<ClienteProfile>({
     id: '',
     name: '',
-    login: '',
+    email: '',
     phone: '',
     memberSince: '',
     totalAppointments: 0,
@@ -46,7 +46,7 @@ const Profile: React.FC = () => {
   });
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    login: user?.login || '',
+    email: user?.email || '',
     phone: user?.phone || ''
   });
   const [passwordData, setPasswordData] = useState({
@@ -146,11 +146,11 @@ const Profile: React.FC = () => {
   };
 
   const handleCancel = () => {
-            setFormData({
-          name: user?.name || '',
-          login: user?.login || '',
-          phone: user?.phone || ''
-        });
+    setFormData({
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || ''
+    });
     setIsEditing(false);
     setIsChangingPassword(false);
     setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -183,7 +183,7 @@ const Profile: React.FC = () => {
             </button>
           </div>
           <h2 className="text-xl font-semibold text-bolt-neutral-900">{user?.name}</h2>
-          <p className="text-bolt-neutral-600">{user?.login}</p>
+          <p className="text-bolt-neutral-600">{user?.email}</p>
         </div>
 
         {/* Estatísticas */}
@@ -251,8 +251,8 @@ const Profile: React.FC = () => {
               <Envelope size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-bolt-neutral-400" />
               <input
                 type="text"
-                value={formData.login}
-                onChange={(e) => setFormData(prev => ({ ...prev, login: e.target.value }))}
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 disabled={!isEditing}
                 className={`w-full pl-10 pr-4 py-3 border border-bolt-neutral-300 rounded-xl ${
                   isEditing ? 'input-focus' : 'bg-bolt-neutral-50'

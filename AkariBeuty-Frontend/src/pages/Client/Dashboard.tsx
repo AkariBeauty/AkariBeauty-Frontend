@@ -1,5 +1,5 @@
 // src/pages/Client/Dashboard.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Heart, Star, ArrowRight } from '@phosphor-icons/react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -141,8 +141,8 @@ const Dashboard: React.FC = () => {
                   <Calendar size={20} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium text-bolt-neutral-900">{appointment.service}</h3>
-                  <p className="text-sm text-bolt-neutral-600">{appointment.professional}</p>
+                       <h3 className="font-medium text-bolt-neutral-900">{appointment.service.name}</h3>
+                  <p className="text-sm text-bolt-neutral-600">{appointment.professional.name}</p>
                   <p className="text-sm text-bolt-neutral-500">
                     {new Date(appointment.date).toLocaleDateString('pt-BR')} às {appointment.time}
                   </p>

@@ -1,5 +1,5 @@
 // src/pages/Client/Appointments.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import {
   Calendar,
@@ -11,7 +11,7 @@ import {
   Pencil,
   Trash,
 } from '@phosphor-icons/react';
-import { Appointment, AppointmentStatus, NotificationProps } from '../../types';
+import { AppointmentStatus, NotificationProps } from '../../types';
 import Modal from '../../components/UI/Modal';
 import Notification from '../../components/UI/Notification';
 import { clienteService, ClienteAppointment } from '../../services/clienteService';

@@ -1,5 +1,5 @@
 // src/pages/Client/Booking/BookingWizard.tsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, Check } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom';
 import { Service, Professional, BookingData } from '../../../types'; // Verifique o caminho aqui

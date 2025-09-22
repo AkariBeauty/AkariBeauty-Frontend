@@ -52,6 +52,7 @@ export interface BookingData {
   professional?: Professional;
   date?: string;
   time?: string;
+  notes?: string;
 }
 
 export interface NotificationProps {
@@ -60,3 +61,6 @@ export interface NotificationProps {
   isVisible: boolean;
   onClose: () => void;
 }
+
+export type ClienteCadastroResponse = Service | Professional | string[];
+
