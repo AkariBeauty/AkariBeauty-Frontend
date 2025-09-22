@@ -1,5 +1,5 @@
 // src/pages/Client/Profile.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User,
   Envelope,
@@ -15,10 +15,11 @@ import {
   Star,
   Heart
 } from '@phosphor-icons/react';
-import { useAuth } from '../../contexts/AuthContext'; // Verifique o caminho aqui
-import Notification from '../../components/UI/Notification'; // Verifique o caminho aqui
-import LoadingSpinner from '../../components/UI/LoadingSpinner'; // Verifique o caminho aqui
-import { NotificationProps } from '../../types'; // Importe do seu arquivo de types
+import { useAuth } from '../../contexts/AuthContext';
+import Notification from '../../components/UI/Notification';
+import LoadingSpinner from '../../components/UI/LoadingSpinner';
+import { NotificationProps } from '../../types';
+import { clienteService, ClienteProfile } from '../../services/clienteService';
 
 const Profile: React.FC = () => {
   const { user, updateUser, logout } = useAuth();
@@ -27,11 +28,25 @@ const Profile: React.FC = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // Ajuste de tipo para NotificationProps completa, com onClose
-  const [notification, setNotification] = useState<NotificationProps>({ isVisible: false, type: 'success', message: '', onClose: () => {} });
+  const [userStats, setUserStats] = useState<ClienteProfile>({
+    id: '',
+    name: '',
+    login: '',
+    phone: '',
+    memberSince: '',
+    totalAppointments: 0,
+    favoriteServices: [],
+    averageRating: 0
+  });
+  const [notification, setNotification] = useState<NotificationProps>({ 
+    isVisible: false, 
+    type: 'success', 
+    message: '', 
+    onClose: () => {} 
+  });
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    email: user?.email || '',
+    login: user?.login || '',
     phone: user?.phone || ''
   });
   const [passwordData, setPasswordData] = useState({
@@ -40,26 +55,24 @@ const Profile: React.FC = () => {
     confirmPassword: ''
   });
 
-  // Dados simulados de estatísticas
-  const userStats = {
-    totalAppointments: 12,
-    favoriteServices: ['Corte de Cabelo', 'Manicure'],
-    memberSince: '2023-06-15',
-    averageRating: 4.9
+  useEffect(() => {
+    loadUserStats();
+  }, []);
+
+  const loadUserStats = async () => {
+    try {
+      const statsData = await clienteService.getProfileStats();
+      setUserStats(statsData);
+    } catch {
+      console.error('Erro ao carregar estatísticas');
+    }
   };
 
   const handleSaveProfile = async () => {
     setIsLoading(true);
     try {
-      // TODO: Conectar com sua API C#
-      // await fetch('https://sua-api.com/api/users/profile', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
-      // Simular delay da API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      await clienteService.updateProfile(formData);
+      
       updateUser(formData);
       setIsEditing(false);
       setNotification({
@@ -68,7 +81,6 @@ const Profile: React.FC = () => {
         message: 'Perfil atualizado com sucesso!',
         onClose: () => setNotification(prev => ({ ...prev, isVisible: false }))
       });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setNotification({
         isVisible: true,
@@ -104,29 +116,24 @@ const Profile: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // TODO: Conectar com sua API C#
-      // await fetch('https://sua-api.com/api/users/change-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     currentPassword: passwordData.currentPassword,
-      //     newPassword: passwordData.newPassword
-      //   })
-      // });
+      await clienteService.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
 
-      // Simular delay da API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
       setIsChangingPassword(false);
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setNotification({
         isVisible: true,
         type: 'success',
         message: 'Senha alterada com sucesso!',
         onClose: () => setNotification(prev => ({ ...prev, isVisible: false }))
       });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } catch {
       setNotification({
         isVisible: true,
         type: 'error',
@@ -139,11 +146,11 @@ const Profile: React.FC = () => {
   };
 
   const handleCancel = () => {
-    setFormData({
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: user?.phone || ''
-    });
+            setFormData({
+          name: user?.name || '',
+          login: user?.login || '',
+          phone: user?.phone || ''
+        });
     setIsEditing(false);
     setIsChangingPassword(false);
     setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -176,7 +183,7 @@ const Profile: React.FC = () => {
             </button>
           </div>
           <h2 className="text-xl font-semibold text-bolt-neutral-900">{user?.name}</h2>
-          <p className="text-bolt-neutral-600">{user?.email}</p>
+          <p className="text-bolt-neutral-600">{user?.login}</p>
         </div>
 
         {/* Estatísticas */}
@@ -239,13 +246,13 @@ const Profile: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-bolt-neutral-700 mb-2">Email</label>
+            <label className="block text-sm font-medium text-bolt-neutral-700 mb-2">Login</label>
             <div className="relative">
               <Envelope size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-bolt-neutral-400" />
               <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                type="text"
+                value={formData.login}
+                onChange={(e) => setFormData(prev => ({ ...prev, login: e.target.value }))}
                 disabled={!isEditing}
                 className={`w-full pl-10 pr-4 py-3 border border-bolt-neutral-300 rounded-xl ${
                   isEditing ? 'input-focus' : 'bg-bolt-neutral-50'

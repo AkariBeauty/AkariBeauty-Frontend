@@ -1,6 +1,7 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types'; // Importe do seu arquivo de types/index.ts
+import api from '../services/api'; // Importar a instância da API
 
 interface AuthContextType {
   user: User | null;
@@ -56,37 +57,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
 
     try {
-      // --- SIMULAÇÃO DE LOGIN COM DADOS REAIS DO BANCO ---
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simula delay da API
+      const response = await api.patch('/Cliente/login', {
+        Login: email,
+        Senha: password,
+      });
 
-      // Credenciais reais do banco de dados (baseado no pgAdmin)
-      const validCredentials = [
-        { login: 'marcos', password: 'abcd', name: 'Marcos Oliveira', phone: '(21) 98765-4321' },
-        { login: 'ana.costa', password: 'senha123', name: 'Ana Costa', phone: '(31) 99876-5432' },
-        { login: 'joana@gmail.com', password: '1234', name: 'Joana Silva', phone: '(11) 91234-5678' }
-      ];
-
-      const userCredential = validCredentials.find(
-        cred => cred.login === email && cred.password === password
-      );
-
-      if (userCredential) {
+      if (response.status === 200 && response.data && response.data.token) {
+        // Supondo que a API retorna o token e, talvez, dados do usuário
+        // Você precisará ajustar a estrutura do 'User' para incluir o token e outros dados reais
         const userData: User = {
-          id: Date.now().toString(), // ID temporário
-          name: userCredential.name,
+          id: 'temp-id', // O ID real viria do backend
+          name: 'Nome do Cliente', // O nome real viria do backend
           email: email,
-          phone: userCredential.phone
+          phone: '(XX) XXXXX-XXXX', // O telefone real viria do backend
+          token: response.data.token, // Salvar o token
         };
+
         setUser(userData);
         localStorage.setItem('akari_user', JSON.stringify(userData));
+        localStorage.setItem('akari_token', response.data.token); // Salvar o token separadamente se preferir
         console.log('AuthProvider: Login bem-sucedido com credenciais reais');
         return true;
       }
 
-      console.log('AuthProvider: Credenciais inválidas');
+      console.log('AuthProvider: Credenciais inválidas ou resposta inesperada');
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('AuthProvider: Erro no login:', error);
+      // Pode ser útil verificar error.response?.status para tratar 401 especificamente
+      if (error?.response?.status === 401) {
+        console.log('AuthProvider: Credenciais inválidas (401)');
+      } else {
+        console.log('AuthProvider: Erro genérico no login');
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -97,6 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('AuthProvider: Fazendo logout');
     setUser(null);
     localStorage.removeItem('akari_user');
+    localStorage.removeItem('akari_token'); // Remover o token ao fazer logout
   };
 
   const updateUser = (userData: Partial<User>) => {

@@ -7,6 +7,7 @@ import ServiceSelection from './steps/ServiceSelection';
 import ProfessionalSelection from './steps/ProfessionalSelection';
 import DateTimeSelection from './steps/DateTimeSelection';
 import BookingConfirmation from './steps/BookingConfirmation';
+import { clienteService } from '../../../services/clienteService';
 
 const BookingWizard: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -36,14 +37,23 @@ const BookingWizard: React.FC = () => {
   };
 
   const handleBookingConfirm = async () => {
-    // TODO: Conectar com sua API C#
-    // await fetch('https://sua-api.com/api/appointments', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(bookingData)
-    // });
-    console.log('Agendamento confirmado:', bookingData);
-    navigate('/appointments');
+    try {
+      // Criar o agendamento na API
+      await clienteService.createAppointment({
+        serviceId: bookingData.service!.id,
+        professionalId: bookingData.professional!.id,
+        date: bookingData.date!,
+        time: bookingData.time!,
+        notes: bookingData.notes
+      });
+      
+      console.log('Agendamento confirmado:', bookingData);
+      navigate('/appointments');
+    } catch (error) {
+      console.error('Erro ao criar agendamento:', error);
+      // Aqui você pode adicionar um toast ou modal de erro
+      alert('Erro ao criar agendamento. Tente novamente.');
+    }
   };
 
   const goBack = () => {

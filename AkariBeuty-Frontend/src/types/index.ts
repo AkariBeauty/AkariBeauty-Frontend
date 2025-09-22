@@ -5,6 +5,7 @@ export interface User {
   email: string;
   phone: string;
   avatar?: string;
+  token?: string; // Adicionar o campo token
 }
 
 export interface Service {

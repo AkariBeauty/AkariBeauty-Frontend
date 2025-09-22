@@ -12,7 +12,7 @@ interface Config {
 
 type Methods = "get" | "post" | "put" | "delete" | "patch";
 
-const urlBase = "https://localhost:44317/api/v1/"
+const urlBase = "https://localhost:8443/api/v1/"
 
 
 export default class BaseService {

@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, EyeSlash, User, Lock, ArrowRight } from '@phosphor-icons/react';
+import { Eye, EyeSlash, User, ArrowRight } from '@phosphor-icons/react';
 
 const LoginClient: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [loginValue, setLoginValue] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,13 +20,13 @@ const LoginClient: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
+      const success = await login(loginValue, password);
       if (success) {
         navigate('/cliente/dashboard');
       } else {
         setError('Email ou senha incorretos. Tente novamente.');
       }
-    } catch (err) {
+    } catch {
       setError('Erro ao fazer login. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -65,15 +65,15 @@ const LoginClient: React.FC = () => {
               </label>
               <div className="relative">
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="login"
+                  name="login"
+                  type="login"
+                  autoComplete="login"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={loginValue}
+                  onChange={(e) => setLoginValue(e.target.value)}
                   className="w-full px-4 py-3 border border-bolt-neutral-300 rounded-lg focus:ring-2 focus:ring-bolt-primary-500 focus:border-transparent transition-colors"
-                  placeholder="seu@email.com"
+                  placeholder="Usuário"
                 />
               </div>
             </div>
