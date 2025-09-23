@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 
+
 // **NOVAS IMPORTAÇÕES DO MÓDULO CLIENTE (ACRESCENTADAS)**
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ClientLayout from './components/Layout/ClientLayout';

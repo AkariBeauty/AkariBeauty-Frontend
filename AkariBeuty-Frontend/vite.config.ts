@@ -13,6 +13,14 @@ export default defineConfig({
     port: 5173,
     hmr: {
       host: 'localhost'
-    }
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+    allowedHosts: ['5173-izmhm4l0obom1fhgb0xd8-084f4bfb.manus.computer'],
   }
 })
