@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../services/api";
 import InputLogin from "../../components/InputLogin";
 import { User, Envelope, Key, Phone, MapPin } from "@phosphor-icons/react";
+import BaseService from "../../services/Generic/BaseService";
+import AlertModal from "../../components/AlertModal";
 
 export default function SingupCliente() {
     const navigate = useNavigate();
@@ -14,50 +15,69 @@ export default function SingupCliente() {
         cidade: "",
         bairro: "",
         rua: "",
-        numero: 0,
+        numero: "", // Alterado para string para evitar problemas com parseInt em campos vazios
         login: "",
         senha: "",
         telefone: ""
     });
     
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const [modalError, setModalError] = useState(false);
+    const [modalSuccess, setModalSuccess] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
     const handleInputChange = (field: string) => (value: string) => {
         setFormData(prev => ({
             ...prev,
-            [field]: field === 'numero' ? parseInt(value) || 0 : value
+            [field]: value
         }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        setError("");
-        setSuccess("");
+        setModalError(false);
+        setModalSuccess(false);
+        setErrorMessage("");
+        setSuccessMessage("");
 
         try {
-            console.log('Tentando cadastrar cliente:', formData);
+            console.log("Tentando cadastrar cliente:", formData);
             
-            const response = await api.post('/cliente/cadastro', formData);
+            const service = new BaseService({
+                method: "post",
+                url: "cliente/cadastro", 
+                data: {
+                    ...formData,
+                    numero: parseInt(formData.numero) || 0 // Converte numero para int antes de enviar
+                },
+                auth: false,
+                headers: null
+            });
+
+            const response = await service.request();
             
-            console.log('Resposta do cadastro:', response);
+            console.log("Resposta do cadastro:", response);
             
-            if (response.status === 200) {
-                setSuccess("Cliente cadastrado com sucesso! Redirecionando para login...");
+            if (response.status === 201) { // 201 Created é mais comum para sucesso de criação
+                setSuccessMessage("Cliente cadastrado com sucesso! Redirecionando para login...");
+                setModalSuccess(true);
                 setTimeout(() => {
-                    navigate("/login-bolt");
+                    navigate("/login"); // Redireciona para a página de login
                 }, 2000);
+            } else {
+                setErrorMessage(response.data || "Erro desconhecido ao cadastrar.");
+                setModalError(true);
             }
         } catch (error: any) {
-            console.error('Erro no cadastro:', error);
-            
-            if (error.response?.status === 400) {
-                setError(error.response.data || "Dados inválidos. Verifique os campos.");
+            console.error("Erro no cadastro:", error);
+            if (error.response?.data) {
+                setErrorMessage(error.response.data.message || "Erro ao cadastrar cliente. Tente novamente.");
             } else {
-                setError("Erro ao cadastrar cliente. Tente novamente.");
+                setErrorMessage("Erro de conexão ou servidor. Tente novamente.");
             }
+            setModalError(true);
         } finally {
             setIsLoading(false);
         }
@@ -71,18 +91,6 @@ export default function SingupCliente() {
                         Cadastro de Cliente
                     </h1>
                     
-                    {error && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                            {error}
-                        </div>
-                    )}
-                    
-                    {success && (
-                        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                            {success}
-                        </div>
-                    )}
-
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <InputLogin
@@ -91,7 +99,8 @@ export default function SingupCliente() {
                                 type="text"
                                 placeholder="Seu nome completo"
                                 icon={<User size={24} className="text-primary" />}
-                                action={handleInputChange('nome')}
+                                action={handleInputChange("nome")}
+                                value={formData.nome}
                             />
                             
                             <InputLogin
@@ -100,7 +109,8 @@ export default function SingupCliente() {
                                 type="text"
                                 placeholder="000.000.000-00"
                                 icon={<User size={24} className="text-primary" />}
-                                action={handleInputChange('cpf')}
+                                action={handleInputChange("cpf")}
+                                value={formData.cpf}
                             />
                         </div>
 
@@ -111,7 +121,8 @@ export default function SingupCliente() {
                                 type="text"
                                 placeholder="SP"
                                 icon={<MapPin size={24} className="text-primary" />}
-                                action={handleInputChange('uf')}
+                                action={handleInputChange("uf")}
+                                value={formData.uf}
                             />
                             
                             <InputLogin
@@ -120,7 +131,8 @@ export default function SingupCliente() {
                                 type="text"
                                 placeholder="São Paulo"
                                 icon={<MapPin size={24} className="text-primary" />}
-                                action={handleInputChange('cidade')}
+                                action={handleInputChange("cidade")}
+                                value={formData.cidade}
                             />
                             
                             <InputLogin
@@ -129,7 +141,8 @@ export default function SingupCliente() {
                                 type="text"
                                 placeholder="Centro"
                                 icon={<MapPin size={24} className="text-primary" />}
-                                action={handleInputChange('bairro')}
+                                action={handleInputChange("bairro")}
+                                value={formData.bairro}
                             />
                         </div>
 
@@ -141,7 +154,8 @@ export default function SingupCliente() {
                                     type="text"
                                     placeholder="Rua das Flores"
                                     icon={<MapPin size={24} className="text-primary" />}
-                                    action={handleInputChange('rua')}
+                                    action={handleInputChange("rua")}
+                                    value={formData.rua}
                                 />
                             </div>
                             
@@ -151,7 +165,8 @@ export default function SingupCliente() {
                                 type="text"
                                 placeholder="123"
                                 icon={<MapPin size={24} className="text-primary" />}
-                                action={handleInputChange('numero')}
+                                action={handleInputChange("numero")}
+                                value={formData.numero}
                             />
                         </div>
 
@@ -162,7 +177,8 @@ export default function SingupCliente() {
                                 type="text"
                                 placeholder="(11) 99999-9999"
                                 icon={<Phone size={24} className="text-primary" />}
-                                action={handleInputChange('telefone')}
+                                action={handleInputChange("telefone")}
+                                value={formData.telefone}
                             />
                             
                             <InputLogin
@@ -171,7 +187,8 @@ export default function SingupCliente() {
                                 type="email"
                                 placeholder="seu@email.com"
                                 icon={<Envelope size={24} className="text-primary" />}
-                                action={handleInputChange('login')}
+                                action={handleInputChange("login")}
+                                value={formData.login}
                             />
                         </div>
 
@@ -181,13 +198,14 @@ export default function SingupCliente() {
                             type="password"
                             placeholder="Sua senha"
                             icon={<Key size={24} className="text-primary" />}
-                            action={handleInputChange('senha')}
+                            action={handleInputChange("senha")}
+                            value={formData.senha}
                         />
 
                         <div className="flex gap-4">
                             <button
                                 type="button"
-                                onClick={() => navigate("/login-bolt")}
+                                onClick={() => navigate("/login")} // Alterado para /login
                                 className="flex-1 py-3 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                             >
                                 Cancelar
@@ -204,6 +222,9 @@ export default function SingupCliente() {
                     </form>
                 </div>
             </div>
+            <AlertModal isOpen={modalError} show={setModalError} message={errorMessage} />
+            <AlertModal isOpen={modalSuccess} show={setModalSuccess} message={successMessage} />
         </div>
     );
 }
+
