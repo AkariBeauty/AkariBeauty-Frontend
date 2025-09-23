@@ -15,7 +15,7 @@ export default function SingupCliente() {
         cidade: "",
         bairro: "",
         rua: "",
-        numero: "", // Alterado para string para evitar problemas com parseInt em campos vazios
+        numero: "", 
         login: "",
         senha: "",
         telefone: ""
@@ -47,10 +47,10 @@ export default function SingupCliente() {
             
             const service = new BaseService({
                 method: "post",
-                url: "cliente/cadastro", 
+                url: "cliente", 
                 data: {
                     ...formData,
-                    numero: parseInt(formData.numero) || 0 // Converte numero para int antes de enviar
+                    numero: parseInt(formData.numero) || 0 
                 },
                 auth: false,
                 headers: null
@@ -60,11 +60,11 @@ export default function SingupCliente() {
             
             console.log("Resposta do cadastro:", response);
             
-            if (response.status === 201) { // 201 Created é mais comum para sucesso de criação
+            if (response.status === 200 || response.status === 201) { 
                 setSuccessMessage("Cliente cadastrado com sucesso! Redirecionando para login...");
                 setModalSuccess(true);
                 setTimeout(() => {
-                    navigate("/login"); // Redireciona para a página de login
+                    navigate("/login"); 
                 }, 2000);
             } else {
                 setErrorMessage(response.data || "Erro desconhecido ao cadastrar.");
@@ -205,7 +205,7 @@ export default function SingupCliente() {
                         <div className="flex gap-4">
                             <button
                                 type="button"
-                                onClick={() => navigate("/login")} // Alterado para /login
+                                onClick={() => navigate("/login")} 
                                 className="flex-1 py-3 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                             >
                                 Cancelar
