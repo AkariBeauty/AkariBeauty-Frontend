@@ -19,11 +19,11 @@ export default function FormLogin() {
     // Create the service instance only when needed, e.g., in a function
     const loginSevice = () => {
         const service = new BaseService({
-            method: "patch",
+                                    method: "PATCH",
             url: typeUser + "/login",
             data: {
                 "login" : login,
-                "password" : password
+                          "senha" : password
             },
             auth: false,
             headers: null
