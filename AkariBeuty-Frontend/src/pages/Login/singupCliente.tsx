@@ -1,29 +1,64 @@
-import { Envelope, Key, SignIn } from "@phosphor-icons/react"
-
+import { Envelope, Key, UserPlus } from "@phosphor-icons/react"
+import { useState } from "react";
+import InputLogin from "../../components/InputLogin";
+import BaseService from "../../services/Generic/BaseService";
+import AlertModal from "../../components/AlertModal";
+import { useNavigate } from "react-router-dom";
 
 export default function SingupCliente() {
+    const navigate = useNavigate();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [modalError, setModalError] = useState(false);
+    const [modalSuccess, setModalSuccess] = useState(false);
+
+    const registerService = () => {
+        const service = new BaseService({
+            method: "post",
+            url: "cliente", // Assuming the client registration endpoint is /api/v1/cliente
+            data: {
+                "login": email,
+                "senha": password
+            },
+            auth: false,
+            headers: null
+        });
+
+        service.request().then((response) => {
+            if (response.status === 201) { // Assuming 201 Created for successful registration
+                setModalSuccess(true);
+                setTimeout(() => {
+                    navigate("/login"); // Redirect to login after successful registration
+                }, 2000);
+                return;
+            }
+            setModalError(true);
+        }).catch(() => {
+            setModalError(true);
+        });
+    };
 
     return (
-    <>
-        <span className="text-4xl font-bold underline my-[10%]">Cliente Akari Beauty</span>
+        <div className="flex flex-col w-full h-full justify-evenly text-center justify-items-center mt-[3%] mb-[5%]">
+            <div className="text-center flex flex-col mt-[5%]">
+                <span className="text-4xl font-bold ">Cadastro de Cliente</span>
+                <span>Preencha seus dados para criar uma conta</span>
+            </div>
 
-        <label className="text-2xl w-full mb-1.5">Email</label>
+            <div className="p-10 w-full text-start flex flex-col gap-10">
+                <InputLogin id="email" action={(text) => setEmail(text)} label="Email" type="email" placeholder="seu@exemplo.com" icon={<Envelope size={32} className="text-primary" />} />
+                <InputLogin id="password" action={(text) => setPassword(text)} label="Senha" type="password" placeholder="Insira sua senha..." icon={<Key size={32} className="text-primary" />} />
+            </div>
 
-        <div tabIndex={0} className="flex flex-row items-center justify-center border-primary shadow-[0px_0px_5px_rgba(0,0,0,0.2)] w-full h-[8%] rounded-[7px] px-[10px] border-l-[10px] border-l-primary focus-within:ring-2 focus-within:ring-primary mb-[10%]">
-            <Envelope size={32} className="text-primary mr-[10px] "/>
-            <input type="email" name="email" id="email" className="w-full h-full focus:outline-none" placeholder="your@example.com"/>
+            <div className="w-full flex flex-row justify-center">
+                <button onClick={registerService} className="p-2.5 px-3.5 rounded-lg bg-primary text-2xl text-textSecondary font-bold cursor-pointer flex flex-row items-center " type="button">
+                    <UserPlus size={28} weight="bold" className="text-center" /> CADASTRAR
+                </button>
+            </div>
+
+            <AlertModal isOpen={modalError} show={setModalError} message="Erro ao cadastrar! Verifique os dados." />
+            <AlertModal isOpen={modalSuccess} show={setModalSuccess} message="Cadastro realizado com sucesso!" />
         </div>
-
-        <label className="text-2xl w-full mb-1.5">Senha</label>
-
-        <div tabIndex={0} className="flex flex-row items-center justify-center border-primary shadow-[0px_0px_5px_rgba(0,0,0,0.2)] w-full h-[8%] rounded-[7px] px-[10px] border-l-[10px] border-l-primary focus-within:ring-2 focus-within:ring-primary mb-[10px]">
-            <Key size={32} className="text-primary mr-[10px] "/>
-            <input type="password" name="password" id="password" className="w-full h-full focus:outline-none" placeholder="Insira sua senha..."/>
-        </div>
-
-        <div className="mb-[15%] w-full"><a className="underline text-[16px]" href="#">Esqueci minha senha!</a></div>
-
-        <button className="p-2.5 px-3.5 rounded-lg bg-primary text-2xl text-textSecondary font-bold cursor-pointer flex flex-row items-center" type="submit"><SignIn size={28} weight="bold" className="mr-[10px]"/> LOG IN</button>
-    </>
     );
 }
+
