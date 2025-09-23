@@ -47,7 +47,7 @@ export default function SingupCliente() {
             
             const service = new BaseService({
                 method: "post",
-                url: "cliente", 
+                url: "cliente", // O endpoint para cadastro de cliente é /api/v1/cliente
                 data: {
                     ...formData,
                     numero: parseInt(formData.numero) || 0 
@@ -67,13 +67,15 @@ export default function SingupCliente() {
                     navigate("/login"); 
                 }, 2000);
             } else {
-                setErrorMessage(response.data || "Erro desconhecido ao cadastrar.");
+                // Se o backend retornar um erro com 'message', exibe-o
+                setErrorMessage(response.data?.message || response.data || "Erro desconhecido ao cadastrar.");
                 setModalError(true);
             }
         } catch (error: any) {
             console.error("Erro no cadastro:", error);
             if (error.response?.data) {
-                setErrorMessage(error.response.data.message || "Erro ao cadastrar cliente. Tente novamente.");
+                // Tenta pegar a mensagem de erro do backend
+                setErrorMessage(error.response.data.message || error.response.data || "Erro ao cadastrar cliente. Tente novamente.");
             } else {
                 setErrorMessage("Erro de conexão ou servidor. Tente novamente.");
             }
