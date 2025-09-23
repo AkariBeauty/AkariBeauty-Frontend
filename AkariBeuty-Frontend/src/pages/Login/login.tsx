@@ -1,91 +1,80 @@
-import { Envelope, Key, SignIn } from "@phosphor-icons/react"
-import { useNavigate } from "react-router-dom"
-import LoginTabs from "../../components/LoginTabs";
+import { Envelope, Key, SignIn } from "@phosphor-icons/react";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import LoginTabs from "../../components/LoginTabs";
 import InputLogin from "../../components/InputLogin";
-import api from "../../services/api";
 import AlertModal from "../../components/AlertModal";
+import BaseService from "../../services/Generic/BaseService";
 
 type UserType = "cliente" | "profissional" | "empresa" | "usuario" | null;
+
+interface ApiResponse {
+    success: number;
+    data: string;
+}
 
 export default function FormLogin() {
     const navigate = useNavigate();
 
-    const [typeUser, setTypeUser] = useState<UserType>("cliente"); // Definindo "cliente" como padrão
+    const [typeUser, setTypeUser] = useState<UserType>("cliente");
     const [login, setLogin] = useState("");
     const [password, setPassword] = useState("");
     const [modalError, setModalError] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    // Create the service instance only when needed, e.g., in a function
-    const loginSevice = () => {
+    const loginService = () => {
+        setIsLoading(true);
         const service = new BaseService({
-            method: "PATCH",
+            method: "patch", // <-- 1. Corrigido para minúsculas
             url: typeUser + "/login",
             data: {
-                "login" : login,
-                "senha" : password
+                "login": login,
+                "senha": password
             },
             auth: false,
             headers: null
         });
 
-        service.request().then((response) => {
-            if (response.success === 200) {
-                localStorage.setItem("token", response.data);
-                navigate("/home");
-                return;
-            }
-
-            // Se chegou aqui, login falhou
-            console.log('Login falhou - resposta inválida');
-            setModalError(true);
-            clearForm();
-
-        } catch (error: unknown) {
-            console.error('Erro no login:', error);
-            
-            // Tratar diferentes tipos de erro da API
-            if (error && typeof error === 'object' && 'response' in error) {
-                const apiError = error as { response?: { status?: number, data?: any } };
-                
-                console.log('Erro da API:', apiError.response);
-                
-                if (apiError.response?.status === 401) {
-                    // Credenciais inválidas
-                    console.log('Credenciais inválidas');
-                    setModalError(true);
-                } else if (apiError.response?.status === 404) {
-                    // Endpoint não encontrado - verificar se a rota está correta
-                    console.error('Endpoint não encontrado. Verifique se a rota está correta na sua API.');
-                    setModalError(true);
-                } else {
-                    // Erro de conexão ou servidor
-                    console.log('Erro de conexão ou servidor');
-                    setModalError(true);
+        service.request()
+            .then((response: ApiResponse) => {
+                if (response.success === 200) {
+                    localStorage.setItem("token", response.data);
+                    navigate("/home");
+                    return;
                 }
-            } else {
-                // Erro genérico
-                console.log('Erro genérico');
+                
+                console.log('Login falhou - resposta inválida');
                 setModalError(true);
-            }
-            
-            clearForm();
-        } finally {
-            setIsLoading(false);
-        }
+                clearForm();
+            })
+            .catch((error: unknown) => {
+                console.error('Erro no login:', error);
+
+                if (error && typeof error === 'object' && 'response' in error) {
+                    // 2. Corrigido 'any' para 'unknown' para seguir as regras do linter
+                    const apiError = error as { response?: { status?: number, data?: unknown } }; 
+                    console.log('Erro da API:', apiError.response);
+
+                    if (apiError.response?.status === 401) {
+                        console.log('Credenciais inválidas');
+                    } else if (apiError.response?.status === 404) {
+                        console.error('Endpoint não encontrado. Verifique a rota na sua API.');
+                    } else {
+                        console.log('Erro de conexão ou servidor');
+                    }
+                } else {
+                    console.log('Erro genérico');
+                }
+                
+                setModalError(true);
+                clearForm();
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
     };
 
     const clearForm = () => {
-        const loginElement = document.getElementById("login") as HTMLInputElement | null;
-        const passwordElement = document.getElementById("password") as HTMLInputElement | null;
-
-        if (loginElement) {
-            loginElement.value = "";
-        }
-        if (passwordElement) {
-            passwordElement.value = "";
-        }
-        
         setLogin("");
         setPassword("");
     };
@@ -99,6 +88,7 @@ export default function FormLogin() {
 
     return (
         <div className="flex flex-col w-full h-full justify-evenly text-center justify-items-center mt-[3%] mb-[5%]">
+            {/* ... o restante do seu JSX continua aqui ... */}
             <div className="text-center flex flex-col mt-[5%]">
                 <span className="text-4xl font-bold ">Bem-vindo</span>
                 <span>Entre com sua conta para continuar</span>
@@ -112,6 +102,7 @@ export default function FormLogin() {
                 <InputLogin
                     id="login"
                     action={(text) => setLogin(text)}
+                    value={login} 
                     label="Login"
                     type="text"
                     placeholder="Seu login ou email"
@@ -119,8 +110,9 @@ export default function FormLogin() {
                 />
 
                 <InputLogin
-                    id="password"
+                    id="senha"
                     action={(text) => setPassword(text)}
+                    value={password} // <-- 3. Corrigido de 'senha' para 'password'
                     label="Senha"
                     type="password"
                     placeholder="Insira sua senha..."
@@ -133,38 +125,37 @@ export default function FormLogin() {
             </div>
 
             <div className="w-full flex flex-row justify-center">
-                <button
-                    onClick={loginService}
-                    disabled={isLoading}
-                    className="p-2.5 px-3.5 rounded-lg bg-primary text-2xl text-textSecondary font-bold cursor-pointer flex flex-row items-center disabled:opacity-50"
-                    type="button"
-                >
-                    {isLoading ? (
-                        <>
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2"></div>
-                            CONECTANDO...
-                        </>
-                    ) : (
-                        <>
-                            <SignIn size={28} weight="bold" className="text-center mr-2"/> LOG IN
-                        </>
-                    )}
-                </button>
-            </div>
-
-            {/* Credenciais de demonstração */}
-            <div className="w-full text-center">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mx-10">
-                    <p className="text-sm text-blue-800 font-medium mb-2">
-                        💡 Credenciais do Banco de Dados:
-                    </p>
-                    <div className="text-xs text-blue-700 space-y-1">
-                        <p><strong>Joana:</strong> joana@gmail.com / 1234</p>
-                        <p><strong>Marcos:</strong> marcos / abcd</p>
-                        <p><strong>Ana:</strong> ana.costa / senha123</p>
-                    </div>
-                </div>
-            </div>
+                 <button
+                     onClick={loginService}
+                     disabled={isLoading}
+                     className="p-2.5 px-3.5 rounded-lg bg-primary text-2xl text-textSecondary font-bold cursor-pointer flex flex-row items-center disabled:opacity-50"
+                     type="button"
+                 >
+                     {isLoading ? (
+                         <>
+                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2"></div>
+                             CONECTANDO...
+                         </>
+                     ) : (
+                         <>
+                             <SignIn size={28} weight="bold" className="text-center mr-2"/> LOG IN
+                         </>
+                     )}
+                 </button>
+             </div>
+            
+            <div className="w-full text-center mt-5">
+                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mx-10">
+                     <p className="text-sm text-blue-800 font-medium mb-2">
+                         💡 Credenciais do Banco de Dados:
+                     </p>
+                     <div className="text-xs text-blue-700 space-y-1">
+                         <p><strong>Joana:</strong> joana@gmail.com / 1234</p>
+                         <p><strong>Marcos:</strong> marcos / abcd</p>
+                         <p><strong>Ana:</strong> ana.costa / senha123</p>
+                     </div>
+                 </div>
+             </div>
 
             <AlertModal isOpen={modalError} show={setModalError} message="Login ou senha inválidos!" />
         </div>
