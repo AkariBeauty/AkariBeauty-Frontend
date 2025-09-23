@@ -15,61 +15,24 @@ export default function FormLogin() {
     const [login, setLogin] = useState("");
     const [password, setPassword] = useState("");
     const [modalError, setModalError] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
 
-    const loginService = async () => {
-        console.log('=== INÍCIO DO LOGIN ===');
-        console.log('typeUser:', typeUser);
-        console.log('login:', login);
-        console.log('password:', password);
-        
-        if (!typeUser) {
-            console.log('ERRO: typeUser não definido');
-            setModalError(true);
-            return;
-        }
+    // Create the service instance only when needed, e.g., in a function
+    const loginSevice = () => {
+        const service = new BaseService({
+            method: "PATCH",
+            url: typeUser + "/login",
+            data: {
+                "login" : login,
+                "senha" : password
+            },
+            auth: false,
+            headers: null
+        });
 
-        if (!login || !password) {
-            console.log('ERRO: login ou password vazios');
-            setModalError(true);
-            return;
-        }
-
-        setIsLoading(true);
-
-        try {
-            console.log('Tentando login para:', typeUser, 'com dados:', { login, senha: '***' });
-            
-            // Chamada para sua API web existente
-            const response = await api.patch(`/${typeUser}/login`, {
-                Login: login,
-                Password: password
-            });
-
-            console.log('Resposta da API:', response);
-
-            if (response.status === 200 && response.data) {
-                // Armazenar token e dados do usuário
-                const token = response.data.token || response.data.accessToken || response.data;
-                const userData = response.data.user || response.data;
-                
-                console.log('Token recebido:', token);
-                console.log('Dados do usuário:', userData);
-                
-                localStorage.setItem("akari_token", token);
-                localStorage.setItem("akari_user", JSON.stringify({
-                    name: userData.nome || userData.name || login,
-                    login: login,
-                    type: typeUser,
-                    id: userData.id
-                }));
-
-                // Redirecionar baseado no tipo de usuário
-                if (typeUser === "cliente") {
-                    navigate("/cliente/dashboard");
-                } else {
-                    navigate("/home");
-                }
+        service.request().then((response) => {
+            if (response.success === 200) {
+                localStorage.setItem("token", response.data);
+                navigate("/home");
                 return;
             }
 
