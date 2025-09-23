@@ -15,7 +15,7 @@ export default function SingupCliente() {
         cidade: "",
         bairro: "",
         rua: "",
-        numero: "", 
+        numero: "",
         login: "",
         senha: "",
         telefone: ""
@@ -49,10 +49,17 @@ export default function SingupCliente() {
                 method: "post",
                 url: "cliente", // O endpoint para cadastro de cliente é /api/v1/cliente
                 data: {
-                    ...formData,
-                    numero: parseInt(formData.numero) || 0 
+                    nome: formData.nome,
+                    cpf: formData.cpf,
+                    uf: formData.uf,
+                    cidade: formData.cidade,
+                    bairro: formData.bairro,
+                    rua: formData.rua,
+                    numero: parseInt(formData.numero) || 0,
+                    login: formData.login,
+                    senha: formData.senha,
+                    telefone: formData.telefone,
                 },
-                auth: false,
                 headers: null
             });
 
