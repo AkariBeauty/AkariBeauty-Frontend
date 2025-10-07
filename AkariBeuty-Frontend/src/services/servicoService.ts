@@ -1,14 +1,17 @@
-import api from './api';
+import { GenericService, createService } from './Generic/GenericService';
 
 export interface Servico {
   id: number;
-  nome: string;
+  servicoPrestado: string;
   descricao: string;
-  preco: number;
-  duracao: number;
-  categoriaId: number;
+  valorBase: number;
+  categoriaServicoId: number;
   empresaId: number;
-  ativo: boolean;
+  categoriaServico?: CategoriaServico;
+  empresa?: {
+    id: number;
+    nome: string;
+  };
 }
 
 export interface CategoriaServico {
@@ -18,48 +21,40 @@ export interface CategoriaServico {
   ativo: boolean;
 }
 
+// Criar instâncias dos serviços usando o GenericService
+const servicoGenericService = createService<Servico>('servico');
+const categoriaServicoGenericService = createService<CategoriaServico>('categoriaservico');
+
 export const servicoService = {
-  // Buscar todos os serviços
-  async getAll(): Promise<Servico[]> {
-    try {
-      const response = await api.get('/servico');
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar serviços:', error);
-      throw error;
-    }
-  },
+  // Métodos básicos do CRUD
+  getAll: () => servicoGenericService.getAll(),
+  getById: (id: number) => servicoGenericService.getById(id),
+  create: (servico: Omit<Servico, 'id'>) => servicoGenericService.create(servico),
+  update: (id: number, servico: Partial<Servico>) => servicoGenericService.update(id, servico),
+  delete: (id: number) => servicoGenericService.delete(id),
 
-  // Buscar serviço por ID
-  async getById(id: number): Promise<Servico> {
-    try {
-      const response = await api.get(`/servico/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Erro ao buscar serviço ${id}:`, error);
-      throw error;
-    }
-  },
+  // Métodos específicos para serviços
+  getByCategoria: (categoriaId: number) => 
+    servicoGenericService.getByFilter({ categoriaServicoId: categoriaId }),
+  
+  getByEmpresa: (empresaId: number) => 
+    servicoGenericService.getByFilter({ empresaId: empresaId }),
 
-  // Buscar todas as categorias
-  async getCategorias(): Promise<CategoriaServico[]> {
-    try {
-      const response = await api.get('/categoriaservico');
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar categorias:', error);
-      throw error;
-    }
-  },
+  // Métodos para categorias
+  getCategorias: () => categoriaServicoGenericService.getAll(),
+  getCategoriaById: (id: number) => categoriaServicoGenericService.getById(id),
+  createCategoria: (categoria: Omit<CategoriaServico, 'id'>) => 
+    categoriaServicoGenericService.create(categoria),
+  updateCategoria: (id: number, categoria: Partial<CategoriaServico>) => 
+    categoriaServicoGenericService.update(id, categoria),
+  deleteCategoria: (id: number) => categoriaServicoGenericService.delete(id),
 
-  // Buscar serviços por categoria
-  async getByCategoria(categoriaId: number): Promise<Servico[]> {
-    try {
-      const response = await api.get(`/servico?categoriaId=${categoriaId}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Erro ao buscar serviços da categoria ${categoriaId}:`, error);
-      throw error;
-    }
-  }
+  // Métodos avançados
+  getPaginated: (page: number = 1, pageSize: number = 10, filters?: Record<string, any>) =>
+    servicoGenericService.getPaginated(page, pageSize, filters),
+  
+  count: (filters?: Record<string, any>) => servicoGenericService.count(filters),
+  
+  search: (searchTerm: string) => 
+    servicoGenericService.getByFilter({ search: searchTerm }),
 };

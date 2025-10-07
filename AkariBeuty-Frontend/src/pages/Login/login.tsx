@@ -5,6 +5,7 @@ import LoginTabs from "../../components/LoginTabs";
 import InputLogin from "../../components/InputLogin";
 import AlertModal from "../../components/AlertModal";
 import BaseService from "../../services/Generic/BaseService";
+import { useAuth } from "../../contexts/AuthContext";
 
 type UserType = "cliente" | "profissional" | "empresa" | "usuario" | null;
 
@@ -15,6 +16,7 @@ interface ApiResponse {
 
 export default function FormLogin() {
     const navigate = useNavigate();
+    const { login: loginWithAuth } = useAuth();
 
     const [typeUser, setTypeUser] = useState<UserType>("cliente");
     const [login, setLogin] = useState("");
@@ -22,56 +24,52 @@ export default function FormLogin() {
     const [modalError, setModalError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const loginService = () => {
+    const loginService = async () => {
         setIsLoading(true);
-        const service = new BaseService({
-            method: "patch", // <-- 1. Corrigido para minúsculas
-            url: typeUser + "/login",
-            data: {
-                "login": login,
-                "senha": password
-            },
-            auth: false,
-            headers: null
-        });
-
-        service.request()
-            .then((response: ApiResponse) => {
-                if (response.success === 200) {
-                    localStorage.setItem("token", response.data);
-                    navigate("/home");
+        try {
+            // Use AuthContext login only for cliente for now; others keep legacy path
+            if (typeUser === "cliente") {
+                const ok = await loginWithAuth(login, password);
+                if (ok) {
+                    navigate("/cliente/dashboard");
                     return;
                 }
-                
-                console.log('Login falhou - resposta inválida');
                 setModalError(true);
                 clearForm();
-            })
-            .catch((error: unknown) => {
-                console.error('Erro no login:', error);
+                return;
+            }
 
-                if (error && typeof error === 'object' && 'response' in error) {
-                    // 2. Corrigido 'any' para 'unknown' para seguir as regras do linter
-                    const apiError = error as { response?: { status?: number, data?: unknown } }; 
-                    console.log('Erro da API:', apiError.response);
-
-                    if (apiError.response?.status === 401) {
-                        console.log('Credenciais inválidas');
-                    } else if (apiError.response?.status === 404) {
-                        console.error('Endpoint não encontrado. Verifique a rota na sua API.');
-                    } else {
-                        console.log('Erro de conexão ou servidor');
-                    }
-                } else {
-                    console.log('Erro genérico');
-                }
-                
-                setModalError(true);
-                clearForm();
-            })
-            .finally(() => {
-                setIsLoading(false);
+            const service = new BaseService({
+                method: "patch",
+                url: typeUser + "/login",
+                data: {
+                    "login": login,
+                    "senha": password
+                },
+                auth: false,
+                headers: null
             });
+
+            const response: ApiResponse = await service.request();
+            if (response.success === 200) {
+                localStorage.setItem("akari_token", response.data);
+                navigate("/home");
+                return;
+            }
+            console.log('Login falhou - resposta inválida');
+            setModalError(true);
+            clearForm();
+        } catch (error: unknown) {
+            console.error('Erro no login:', error);
+            if (error && typeof error === 'object' && 'response' in error) {
+                const apiError = error as { response?: { status?: number, data?: unknown } };
+                console.log('Erro da API:', apiError.response);
+            }
+            setModalError(true);
+            clearForm();
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const clearForm = () => {
