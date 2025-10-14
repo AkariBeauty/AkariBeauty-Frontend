@@ -14,32 +14,36 @@ const ProfessionalSelection: React.FC<ProfessionalSelectionProps> = ({
   // Dados simulados - conectar com sua API
   const professionals: Professional[] = [
     {
-      id: '1',
+      id: 1,
       name: 'Ana Silva',
-      specialties: ['Corte Feminino', 'Coloração', 'Escova'],
+      specialties: ['Corte de Cabelo', 'Coloração'],
       rating: 4.9,
-      bio: 'Especialista em cortes modernos e colorações. 8 anos de experiência.'
+      bio: 'Especialista em cortes modernos e colorações. 8 anos de experiência.',
+      avatar: undefined
     },
     {
-      id: '2',
+      id: 2,
       name: 'Carla Santos',
-      specialties: ['Manicure', 'Pedicure', 'Unha em Gel'],
+      specialties: ['Manicure', 'Pedicure'],
       rating: 4.8,
-      bio: 'Expert em nail art e cuidados com as unhas. Formação internacional.'
+      bio: 'Expert em nail art e cuidados com as unhas. Formação internacional.',
+      avatar: undefined
     },
     {
-      id: '3',
+      id: 3,
       name: 'Marina Costa',
-      specialties: ['Limpeza de Pele', 'Massagem', 'Design de Sobrancelhas'],
+      specialties: ['Limpeza de Pele', 'Design de Sobrancelhas'],
       rating: 4.9,
-      bio: 'Esteticista certificada com foco em tratamentos naturais.'
+      bio: 'Esteticista certificada com foco em tratamentos naturais.',
+      avatar: undefined
     },
     {
-      id: '4',
+      id: 4,
       name: 'Julia Oliveira',
-      specialties: ['Corte Feminino', 'Mechas', 'Luzes'],
+      specialties: ['Corte de Cabelo', 'Coloração'],
       rating: 4.7,
-      bio: 'Colorista especializada em técnicas avançadas de coloração.'
+      bio: 'Colorista especializada em técnicas avançadas de coloração.',
+      avatar: undefined
     }
   ];
 

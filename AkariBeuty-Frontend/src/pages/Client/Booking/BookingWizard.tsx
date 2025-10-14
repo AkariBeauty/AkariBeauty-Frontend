@@ -10,7 +10,7 @@ import BookingConfirmation from './steps/BookingConfirmation';
 import { clienteService } from '../../../services/clienteService';
 
 const BookingWizard: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(1); // Volta para 1 para começar com ServiceSelection
   const [bookingData, setBookingData] = useState<BookingData>({});
   const navigate = useNavigate();
 
@@ -48,7 +48,7 @@ const BookingWizard: React.FC = () => {
       });
       
       console.log('Agendamento confirmado:', bookingData);
-      navigate('/appointments');
+      navigate('/cliente/appointments');
     } catch (error) {
       console.error('Erro ao criar agendamento:', error);
       // Aqui você pode adicionar um toast ou modal de erro
@@ -60,7 +60,7 @@ const BookingWizard: React.FC = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
-      navigate('/dashboard');
+      navigate('/cliente/dashboard');
     }
   };
 

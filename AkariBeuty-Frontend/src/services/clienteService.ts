@@ -8,24 +8,24 @@ export interface ClienteStats {
 }
 
 export interface ClienteAppointment {
-  id: string;
-  serviceId: string;
+  id: number;
+  serviceId: number;
   service: {
-    id: string;
+    id: number;
     name: string;
     description: string;
     duration: number;
     price: number;
     category: string;
   };
-  professionalId: string;
+  professionalId: number;
   professional: {
-    id: string;
+    id: number;
     name: string;
     specialties: string[];
     rating: number;
   };
-  clientId: string;
+  clientId: number;
   date: string;
   time: string;
   status: string;
@@ -83,9 +83,9 @@ export const clienteService = {
     }
   },
 
-  async cancelAppointment(appointmentId: string): Promise<void> {
+  async cancelAppointment(appointmentId: number): Promise<void> {
     try {
-      await api.patch(`/cliente/agendamentos/${appointmentId}/cancelar`);
+      await api.patch(`/agendamento/${appointmentId}/cancelar`);
     } catch (error) {
       console.error('Erro ao cancelar agendamento:', error);
       throw error;
@@ -146,7 +146,7 @@ export const clienteService = {
     }
   },
 
-  async getAvailableProfessionals(serviceId: string): Promise<Professional[]> {
+  async getAvailableProfessionals(serviceId: number): Promise<Professional[]> {
     try {
       const response = await api.get(`/cliente/servicos/${serviceId}/profissionais`);
       return response.data;
@@ -156,7 +156,7 @@ export const clienteService = {
     }
   },
 
-  async getAvailableSlots(serviceId: string, professionalId: string, date: string): Promise<string[]> {
+  async getAvailableSlots(serviceId: number, professionalId: number, date: string): Promise<string[]> {
     try {
       const response = await api.get(`/cliente/servicos/${serviceId}/profissionais/${professionalId}/horarios`, {
         params: { date }
@@ -169,14 +169,22 @@ export const clienteService = {
   },
 
   async createAppointment(appointmentData: {
-    serviceId: string;
-    professionalId: string;
+    serviceId: number;
+    professionalId: number;
     date: string;
     time: string;
     notes?: string;
   }): Promise<void> {
     try {
-      await api.post('/agendamento', appointmentData);
+      // Converter os dados para o formato esperado pelo backend
+      const backendData = {
+        ServiceId: appointmentData.serviceId,
+        ProfessionalId: appointmentData.professionalId,
+        Date: appointmentData.date,
+        Time: appointmentData.time,
+        Notes: appointmentData.notes
+      };
+      await api.post('/agendamento', backendData);
     } catch (error) {
       console.error('Erro ao criar agendamento:', error);
       throw error;

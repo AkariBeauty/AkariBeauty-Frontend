@@ -1,5 +1,6 @@
 // src/pages/Client/Appointments.tsx
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   Calendar,
@@ -17,6 +18,7 @@ import Notification from '../../components/UI/Notification';
 import { clienteService, ClienteAppointment } from '../../services/clienteService';
 
 const Appointments: React.FC = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all');
   const [selectedAppointment, setSelectedAppointment] = useState<ClienteAppointment | null>(null);
@@ -114,7 +116,10 @@ const Appointments: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-bolt-neutral-900">Meus Agendamentos</h1>
-        <button className="bg-bolt-primary-500 text-white px-4 py-2 rounded-lg hover:bg-bolt-primary-600 transition-colors">
+        <button 
+          onClick={() => navigate('/cliente/booking')}
+          className="bg-bolt-primary-500 text-white px-4 py-2 rounded-lg hover:bg-bolt-primary-600 transition-colors"
+        >
           Novo Agendamento
         </button>
       </div>
@@ -162,7 +167,10 @@ const Appointments: React.FC = () => {
               }
             </p>
             {!searchTerm && statusFilter === 'all' && (
-              <button className="bg-bolt-primary-500 text-white px-6 py-2 rounded-lg hover:bg-bolt-primary-600 transition-colors">
+              <button 
+                onClick={() => navigate('/cliente/booking')}
+                className="bg-bolt-primary-500 text-white px-6 py-2 rounded-lg hover:bg-bolt-primary-600 transition-colors"
+              >
                 Fazer Agendamento
               </button>
             )}

@@ -57,25 +57,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
 
     try {
-      const response = await api.patch('/Cliente/login', {
+      const response = await api.patch('/cliente/login', {
         Login: email,
         Password: password,
       });
 
-      if (response.status === 200 && response.data && response.data.token) {
-        // Supondo que a API retorna o token e, talvez, dados do usuário
-        // Você precisará ajustar a estrutura do 'User' para incluir o token e outros dados reais
+      if (response.status === 200 && response.data) {
+        // A API retorna o token diretamente
+        const token = response.data;
         const userData: User = {
           id: 'temp-id', // O ID real viria do backend
           name: 'Nome do Cliente', // O nome real viria do backend
           email: email,
           phone: '(XX) XXXXX-XXXX', // O telefone real viria do backend
-          token: response.data.token, // Salvar o token
+          token: token, // Salvar o token
         };
 
         setUser(userData);
         localStorage.setItem('akari_user', JSON.stringify(userData));
-        localStorage.setItem('akari_token', response.data.token); // Salvar o token separadamente se preferir
+        localStorage.setItem('akari_token', token); // Salvar o token separadamente se preferir
         console.log('AuthProvider: Login bem-sucedido com credenciais reais');
         return true;
       }

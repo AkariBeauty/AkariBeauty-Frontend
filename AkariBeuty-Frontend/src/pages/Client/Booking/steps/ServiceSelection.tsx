@@ -1,93 +1,94 @@
 // src/pages/Client/Booking/steps/ServiceSelection.tsx
-import React, { useState, useEffect } from 'react';
-import { Scissors, Palette, Hand, Star, Spinner } from '@phosphor-icons/react';
-import { servicoService, Servico, CategoriaServico } from '../../../../services/servicoService';
+import React, { useState } from 'react';
+import { Scissors, Palette, Hand, Star, Clock } from '@phosphor-icons/react';
+import { Service } from '../../../../types';
 
 interface ServiceSelectionProps {
-  onServiceSelect: (service: Servico) => void;
+  onServiceSelect: (service: Service) => void;
 }
 
 const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelect }) => {
-  const [categorias, setCategorias] = useState<CategoriaServico[]>([]);
-  const [servicos, setServicos] = useState<Servico[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Carregar categorias e serviços em paralelo
-      const [categoriasData, servicosData] = await Promise.all([
-        servicoService.getCategorias(),
-        servicoService.getAll()
-      ]);
-      
-      setCategorias(categoriasData);
-      setServicos(servicosData);
-    } catch (err) {
-      console.error('Erro ao carregar dados:', err);
-      setError('Erro ao carregar serviços. Tente novamente.');
-    } finally {
-      setIsLoading(false);
+  // Dados mockados para demonstração
+  const mockServices: Service[] = [
+    {
+      id: 1,
+      name: 'Corte de Cabelo',
+      description: 'Corte moderno e estiloso',
+      duration: 60,
+      price: 80.00,
+      category: 'Cabelo',
+      image: undefined
+    },
+    {
+      id: 2,
+      name: 'Coloração',
+      description: 'Coloração completa com produtos de qualidade',
+      duration: 120,
+      price: 150.00,
+      category: 'Cabelo',
+      image: undefined
+    },
+    {
+      id: 3,
+      name: 'Manicure',
+      description: 'Manicure completa com esmaltação',
+      duration: 45,
+      price: 35.00,
+      category: 'Unhas',
+      image: undefined
+    },
+    {
+      id: 4,
+      name: 'Pedicure',
+      description: 'Pedicure completa com esmaltação',
+      duration: 60,
+      price: 45.00,
+      category: 'Unhas',
+      image: undefined
+    },
+    {
+      id: 5,
+      name: 'Design de Sobrancelhas',
+      description: 'Design e modelagem de sobrancelhas',
+      duration: 30,
+      price: 25.00,
+      category: 'Estética',
+      image: undefined
+    },
+    {
+      id: 6,
+      name: 'Limpeza de Pele',
+      description: 'Limpeza facial profunda',
+      duration: 90,
+      price: 120.00,
+      category: 'Estética',
+      image: undefined
     }
-  };
+  ];
 
-  const getServicosByCategoria = (categoriaId: number) => {
-    return servicos.filter(servico => servico.categoriaServicoId === categoriaId);
-  };
-
-  const getCategoryIcon = (categoriaNome: string) => {
-    const nome = categoriaNome.toLowerCase();
-    if (nome.includes('cabelo') || nome.includes('hair')) return Scissors;
-    if (nome.includes('cor') || nome.includes('color')) return Palette;
-    if (nome.includes('unha') || nome.includes('nail')) return Hand;
+  const getCategoryIcon = (category: string) => {
+    const cat = category.toLowerCase();
+    if (cat.includes('cabelo')) return Scissors;
+    if (cat.includes('unha')) return Hand;
+    if (cat.includes('estética')) return Palette;
     return Star;
   };
 
-  const getCategoryColor = (index: number) => {
-    const colors = [
-      'from-bolt-primary-400 to-bolt-primary-600',
-      'from-bolt-secondary-400 to-bolt-secondary-600',
-      'from-bolt-accent-400 to-bolt-accent-600',
-      'from-pink-400 to-pink-600',
-      'from-purple-400 to-purple-600',
-      'from-indigo-400 to-indigo-600'
-    ];
-    return colors[index % colors.length];
+  const getCategoryColor = (category: string) => {
+    const cat = category.toLowerCase();
+    if (cat.includes('cabelo')) return 'from-blue-400 to-blue-600';
+    if (cat.includes('unha')) return 'from-pink-400 to-pink-600';
+    if (cat.includes('estética')) return 'from-purple-400 to-purple-600';
+    return 'from-gray-400 to-gray-600';
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Spinner size={48} className="animate-spin text-bolt-primary-500 mb-4" />
-        <p className="text-bolt-neutral-600">Carregando serviços...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-red-500 mb-4">
-          <Star size={48} className="mx-auto mb-2" />
-          <p className="text-lg font-medium">Ops! Algo deu errado</p>
-        </div>
-        <p className="text-bolt-neutral-600 mb-4">{error}</p>
-        <button
-          onClick={loadData}
-          className="bg-bolt-primary-500 text-white px-6 py-2 rounded-lg hover:bg-bolt-primary-600 transition-colors"
-        >
-          Tentar novamente
-        </button>
-      </div>
-    );
-  }
+  const groupedServices = mockServices.reduce((acc, service) => {
+    if (!acc[service.category]) {
+      acc[service.category] = [];
+    }
+    acc[service.category].push(service);
+    return acc;
+  }, {} as Record<string, Service[]>);
 
   return (
     <div className="space-y-6">
@@ -96,74 +97,56 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelect }) 
         <p className="text-bolt-neutral-600">Selecione o serviço que deseja agendar</p>
       </div>
 
-      {categorias.length === 0 ? (
-        <div className="text-center py-12">
-          <Star size={48} className="mx-auto mb-4 text-bolt-neutral-300" />
-          <p className="text-bolt-neutral-600">Nenhuma categoria de serviço encontrada</p>
-        </div>
-      ) : (
-        categorias.map((categoria, index) => {
-          const servicosCategoria = getServicosByCategoria(categoria.id);
-          const IconComponent = getCategoryIcon(categoria.nome);
-          const colorClass = getCategoryColor(index);
+      {Object.entries(groupedServices).map(([category, services]) => {
+        const IconComponent = getCategoryIcon(category);
+        const colorClass = getCategoryColor(category);
 
-          if (servicosCategoria.length === 0) return null;
-
-          return (
-            <div key={categoria.id} className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center mb-4">
-                <div className={`w-12 h-12 bg-gradient-to-br ${colorClass} rounded-xl flex items-center justify-center mr-4`}>
-                  <IconComponent size={24} className="text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-bolt-neutral-900">{categoria.nome}</h3>
-                  {categoria.descricao && (
-                    <p className="text-sm text-bolt-neutral-600">{categoria.descricao}</p>
-                  )}
-                </div>
+        return (
+          <div key={category} className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center mb-4">
+              <div className={`w-12 h-12 bg-gradient-to-br ${colorClass} rounded-xl flex items-center justify-center mr-4`}>
+                <IconComponent size={24} className="text-white" />
               </div>
-
-              <div className="grid gap-3">
-                {servicosCategoria.map((servico) => (
-                  <button
-                    key={servico.id}
-                    onClick={() => onServiceSelect(servico)}
-                    className="text-left p-4 border border-bolt-neutral-200 rounded-xl hover:border-bolt-primary-300 hover:bg-bolt-primary-50 transition-all card-hover"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-bolt-neutral-900 mb-1">
-                          {servico.servicoPrestado}
-                        </h4>
-                        <p className="text-sm text-bolt-neutral-600 mb-2">
-                          {servico.descricao}
-                        </p>
-                        {servico.empresa && (
-                          <p className="text-xs text-bolt-neutral-500">
-                            {servico.empresa.nome}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-bolt-primary-600">
-                          R$ {servico.valorBase.toFixed(2).replace('.', ',')}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
+              <div>
+                <h3 className="text-lg font-semibold text-bolt-neutral-900">{category}</h3>
+                <p className="text-sm text-bolt-neutral-600">Serviços de {category.toLowerCase()}</p>
               </div>
             </div>
-          );
-        })
-      )}
 
-      {servicos.length === 0 && categorias.length > 0 && (
-        <div className="text-center py-12">
-          <Star size={48} className="mx-auto mb-4 text-bolt-neutral-300" />
-          <p className="text-bolt-neutral-600">Nenhum serviço disponível no momento</p>
-        </div>
-      )}
+            <div className="grid gap-3">
+              {services.map((service) => (
+                <button
+                  key={service.id}
+                  onClick={() => onServiceSelect(service)}
+                  className="text-left p-4 border border-bolt-neutral-200 rounded-xl hover:border-bolt-primary-300 hover:bg-bolt-primary-50 transition-all"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-bolt-neutral-900 mb-1">
+                        {service.name}
+                      </h4>
+                      <p className="text-sm text-bolt-neutral-600 mb-2">
+                        {service.description}
+                      </p>
+                      <div className="flex items-center gap-4 text-xs text-bolt-neutral-500">
+                        <div className="flex items-center gap-1">
+                          <Clock size={14} />
+                          <span>{service.duration} min</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-bolt-primary-600">
+                        R$ {service.price.toFixed(2).replace('.', ',')}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

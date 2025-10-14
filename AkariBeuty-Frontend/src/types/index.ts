@@ -9,7 +9,7 @@ export interface User {
 }
 
 export interface Service {
-  id: string;
+  id: number;
   name: string;
   description: string;
   duration: number; // em minutos
@@ -19,7 +19,7 @@ export interface Service {
 }
 
 export interface Professional {
-  id: string;
+  id: number;
   name: string;
   specialties: string[];
   rating: number;
@@ -34,12 +34,12 @@ export enum AppointmentStatus {
 }
 
 export interface Appointment {
-  id: string;
-  serviceId: string;
+  id: number;
+  serviceId: number;
   service: Service;
-  professionalId: string;
+  professionalId: number;
   professional: Professional;
-  clientId: string;
+  clientId: number;
   date: string;
   time: string;
   status: AppointmentStatus;
