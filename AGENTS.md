@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Permissions
-- branches: ["main", "dev", "feature/*"]
+- branches: ["main", "dev", "13-sprint-2--desenvolver-tela-de-cliente"]
 - can_commit: true
 - can_push: true
 - can_open_pr: true
