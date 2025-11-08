@@ -1,58 +1,40 @@
-import axios from "axios";
-import ServiceResult from "../../types/ServiceResult";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/services/Generic/BaseService.tsx
+import api from "../api";
 
-interface Config {
-    method: Methods;
-    url: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: any | null;
-    auth: boolean | null;
-    headers: Record<string, string> | null;
-}
+type HttpMethod = "get" | "post" | "put" | "delete" | "patch";
 
-type Methods = "get" | "post" | "put" | "delete" | "patch";
-
-const urlBase = "http://localhost:8080/api/v1/"
-
+export type BaseServiceOptions = {
+  method: HttpMethod;
+  url: string;
+  params?: any;
+  data?: any;
+  headers?: Record<string, string>;
+  /** se false, não envia Authorization */
+  auth?: boolean;
+};
 
 export default class BaseService {
-    protected config;
-    constructor({method, url, data = null, auth = false, headers = null}: Config) {
+  private opts: BaseServiceOptions;
 
-        let cabeca: Record<string, string> = {};
+  constructor(options: BaseServiceOptions) {
+    this.opts = { auth: true, ...options };
+  }
 
-        if (auth)
-        {
-            cabeca = {
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            }
-        }
+  async request<T = any>(): Promise<T> {
+    const { method, url, params, data, headers, auth } = this.opts;
 
-        if (headers)
-        {
-            for (const [key, value] of Object.entries(headers)) {
-                cabeca[key] = value;
-            }
-        }
+    // A flag useAuth é lida pelo interceptador em api.ts
+    const config: any = {
+      method,
+      url,
+      params,
+      data,
+      headers,
+      useAuth: auth !== false,
+    };
 
-        this.config = {
-            method: method,
-            maxBodyLength: Infinity,
-            url: urlBase + url,
-            headers: cabeca,
-            data: data
-        }
-
-    }
-
-    async request() : Promise<ServiceResult> {
-        return axios.request(this.config)
-            .then((response) => {
-                return new ServiceResult(response.status, response.statusText, response.data);
-            })
-            .catch((error) => {
-                return new ServiceResult(error.response.status, error.response.statusText, error.response.data);
-            });
-    }
-
+    const response = await api.request<T>(config);
+    return response.data as T; // axios lança erro se não for 2xx
+  }
 }

@@ -15,6 +15,9 @@ import BookingWizard from './pages/Client/Booking/BookingWizard';
 import Appointments from './pages/Client/Appointments';
 import Profile from './pages/Client/Profile';
 import LoadingSpinner from './components/UI/LoadingSpinner';
+import ClientsList from './components/Clientes/ClientsList';
+import ClientEdit from './components/Clientes/ClientEdit';
+import ClientCreate from './components/Clientes/ClientCreate';
 
 // Componente auxiliar para rotas protegidas
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -64,6 +67,9 @@ export default function Routers() {
             <Route path="booking" element={<BookingWizard />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="clientes" element={<ClientsList />} />
+            <Route path="clientes/novo" element={<ClientCreate />} />
+            <Route path="clientes/:id" element={<ClientEdit />} />
           </Route>
 
           {/* **ROTA CORINGA - REDIRECIONA PARA HOME** */}

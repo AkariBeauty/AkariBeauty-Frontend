@@ -1,40 +1,22 @@
-import axios from 'axios';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/services/Generic/api.ts
+import axios from "axios";
 
-// Configuração base da API
-const baseURL = (import.meta as any)?.env?.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 const api = axios.create({
-  baseURL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8080/api/v1/",
+  timeout: 15000,
 });
 
-// Interceptor para adicionar token de autenticação
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('akari_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// Interceptador: injeta Authorization quando useAuth !== false
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  const useAuth = (config as any).useAuth ?? true;
 
-// Interceptor para tratamento de erros
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('akari_token');
-      localStorage.removeItem('akari_user');
-      window.location.href = '/login-bolt';
-    }
-    return Promise.reject(error);
+  if (useAuth && token) {
+    config.headers = config.headers ?? {};
+    (config.headers as any).Authorization = `Bearer ${token}`;
   }
-);
+  return config;
+});
 
 export default api;
