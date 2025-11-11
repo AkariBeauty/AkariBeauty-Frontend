@@ -1,81 +1,54 @@
-// src/routes.tsx
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
-// **SUAS IMPORTAÇÕES ORIGINAIS (MANTIDAS)**
-import Home from "./pages/Home";
-import Login from "./pages/Login";
+// Layout/Proteção (ajuste os paths se necessário no seu projeto)
+import ProtectedRoute from "./ProtectedRoute";
+import ClientLayout from "./components/Layout/ClientLayout";
 
+// Páginas (ajuste os paths se o seu projeto usar outros nomes/pastas)
+import Dashboard from "./pages/Client/Dashboard";
+import Profile from "./pages/Client/Profile";
+import BookingWizard from "./pages/Client/Booking/BookingWizard";
 
-// **NOVAS IMPORTAÇÕES DO MÓDULO CLIENTE (ACRESCENTADAS)**
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import ClientLayout from './components/Layout/ClientLayout';
-import Dashboard from './pages/Client/Dashboard';
-import BookingWizard from './pages/Client/Booking/BookingWizard';
-import Appointments from './pages/Client/Appointments';
-import Profile from './pages/Client/Profile';
-import LoadingSpinner from './components/UI/LoadingSpinner';
-import ClientsList from './components/Clientes/ClientsList';
-import ClientEdit from './components/Clientes/ClientEdit';
-import ClientCreate from './components/Clientes/ClientCreate';
+// Clientes
+import ClientesList from "./pages/Client/ClientList";
+import ClienteEdit from "./pages/Client/ClientEdit";
 
-// Componente auxiliar para rotas protegidas
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
-  return user ? <>{children}</> : <Navigate to="/login-bolt" replace />;
-};
-
-// Componente auxiliar para rotas públicas
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
-  return user ? <Navigate to="/dashboard" replace /> : <>{children}</>;
-};
+// Agendamentos
+import MeusAgendamentos from "./pages/Agendamentos/MeusAgendamentos";
+import NovoAgendamento from "./pages/Agendamentos/NovoAgendamento";
 
 export default function Routers() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* **ROTAS PÚBLICAS (SEM AUTENTICAÇÃO)** */}
-          <Route path="/" element={<Home />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/login-bolt" element={<PublicRoute><Login /></PublicRoute>} />
+    <Routes>
+      {/* Redireciona raiz para a área do cliente */}
+      <Route path="/" element={<Navigate to="/cliente" replace />} />
 
-          {/* **ROTAS PROTEGIDAS (COM AUTENTICAÇÃO)** */}
-          <Route path="/cliente" element={<ProtectedRoute><ClientLayout /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/cliente/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="booking" element={<BookingWizard />} />
-            <Route path="appointments" element={<Appointments />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="clientes" element={<ClientsList />} />
-            <Route path="clientes/novo" element={<ClientCreate />} />
-            <Route path="clientes/:id" element={<ClientEdit />} />
-          </Route>
+      {/* Área autenticada do cliente */}
+      <Route
+        path="/cliente"
+        element={
+          <ProtectedRoute>
+            <ClientLayout />
+          </ProtectedRoute>
+        }
+      >
+        {/* IMPORTANTE: filhos sem barra inicial (rotas relativas) */}
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="booking" element={<BookingWizard />} />
 
-          {/* **ROTA CORINGA - REDIRECIONA PARA HOME** */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+        {/* Clientes */}
+        <Route path="clientes" element={<ClientesList />} />
+        <Route path="clientes/editar/:id" element={<ClienteEdit />} />
+
+        {/* Agendamentos */}
+        <Route path="agendamentos" element={<MeusAgendamentos />} />
+        <Route path="agendamentos/novo" element={<NovoAgendamento />} />
+      </Route>
+
+      {/* 404 simples (opcional) */}
+      <Route path="*" element={<Navigate to="/cliente" replace />} />
+    </Routes>
   );
 }

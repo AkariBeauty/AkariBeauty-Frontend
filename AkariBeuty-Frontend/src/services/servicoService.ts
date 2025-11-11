@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GenericService, createService } from './Generic/GenericService';
 
 export interface Servico {

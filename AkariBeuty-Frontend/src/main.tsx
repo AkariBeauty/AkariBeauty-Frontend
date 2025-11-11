@@ -1,26 +1,34 @@
-// src/main.tsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import Routers from './routes'; // Importa seu arquivo de rotas (que você chamou de Routers)
-import './index.css'; // Importa seu CSS global
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 
-console.log('Iniciando aplicação...');
+import "./index.css";
+import { AuthProvider } from "./contexts/AuthContext";
+import Routers from "./routes";
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  console.error('Elemento root não encontrado!');
-  throw new Error('Elemento root não encontrado');
-}
+console.log("Iniciando aplicação...");
 
-console.log('Elemento root encontrado, criando aplicação...');
-try {
-  const root = ReactDOM.createRoot(rootElement);
+const rootEl = document.getElementById("root");
+
+if (!rootEl) {
+  console.error("Elemento root NÃO encontrado. Verifique seu index.html (div#root).");
+} else {
+  console.log("Elemento root encontrado, criando aplicação...");
+
+  const root = ReactDOM.createRoot(rootEl);
+
   root.render(
     <React.StrictMode>
-      <Routers /> {/* Renderiza seu componente principal de rotas */}
+      {/* O BrowserRouter PRECISA envolver qualquer uso de <Routes/> */}
+      <BrowserRouter>
+        {/* Seu contexto de autenticação pode ficar dentro ou fora do Router;
+           aqui mantemos dentro para ter acesso ao useLocation, se necessário */}
+        <AuthProvider>
+          <Routers />
+        </AuthProvider>
+      </BrowserRouter>
     </React.StrictMode>
   );
-  console.log('Aplicação renderizada com sucesso!');
-} catch (error) {
-  console.error('Erro ao renderizar aplicação:', error);
+
+  console.log("Aplicação renderizada com sucesso!");
 }

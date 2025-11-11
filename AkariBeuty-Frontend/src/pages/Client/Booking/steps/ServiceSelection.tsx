@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/pages/Client/Booking/steps/ServiceSelection.tsx
 import React, { useState } from 'react';
 import { Scissors, Palette, Hand, Star, Clock } from '@phosphor-icons/react';

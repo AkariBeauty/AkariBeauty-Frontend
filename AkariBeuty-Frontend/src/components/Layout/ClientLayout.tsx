@@ -1,4 +1,3 @@
-// src/components/Layout/ClientLayout.tsx
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import ClientHeader from './ClientHeader';
