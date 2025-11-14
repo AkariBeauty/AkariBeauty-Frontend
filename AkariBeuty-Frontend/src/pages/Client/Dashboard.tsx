@@ -1,16 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, Heart, Star, ArrowRight } from "@phosphor-icons/react";
 import { useAuth } from "../../contexts/AuthContext";
+import { AgendamentoService, type Agendamento } from "../../services/agendamentoService";
 
-// Tipos do serviço (o que a API realmente retorna)
-import {
-  ClienteService,
-  type ClienteStats as ApiStats,          // (ex.: { totalAppointments, doneCount, ... })
-  type ClienteAppointment as ApiAppointment, // (ex.: { startAt, endAt, title, status })
-  type ClienteFavorite as ApiFavorite,       // se não existir, mapearemos mesmo assim
-} from "../../services/clienteService";
+const DEFAULT_SERVICE_DURATION_MINUTES = 60;
+const COMPLETED_STATUSES = new Set(["REALIZADO", "DONE", "CONCLUIDO", "COMPLETED"]);
 
 /**
  * Tipos de UI (o que ESTA tela espera para renderizar)
@@ -40,6 +36,10 @@ type UIFavorite = {
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const clienteId = useMemo(() => {
+    const parsed = Number(user?.id);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [user?.id]);
 
   // Estado com o shape esperado pela UI (mantido)
   const [stats, setStats] = useState<UIStats>({
@@ -51,114 +51,29 @@ const Dashboard: React.FC = () => {
   const [favoriteServices, setFavoriteServices] = useState<UIFavorite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  /**
-   * Helpers de mapeamento: convertem o retorno do serviço (API)
-   * para o formato que a tela já usa (sem alterar UI/UX).
-   */
-  function mapStatsToUI(apiStats: ApiStats | null, favs: UIFavorite[]): UIStats {
-    // tente mapear por múltiplos nomes para ser resiliente a contratos
-    const totalAgend =
-      (apiStats as any)?.totalAgendamentos ??
-      (apiStats as any)?.totalAppointments ??
-      0;
-
-    // Se a API não trouxer horas, mantemos 0 (ou calcule pela diferença de horários se quiser)
-    const totalHours =
-      (apiStats as any)?.totalHoras ?? 0;
-
-    // Favoritos = quantidade de itens favoritos (ou use campo da API se existir)
-    const totalFavs =
-      (apiStats as any)?.totalFavoritos ?? favs.length ?? 0;
-
-    return {
-      totalAgendamentos: Number(totalAgend) || 0,
-      totalHoras: Number(totalHours) || 0,
-      totalFavoritos: Number(totalFavs) || 0,
-    };
-  }
-
-  function mapAppointmentToUI(a: ApiAppointment): UIAppointment {
-    // Tenta extrair de vários formatos
-    const start =
-      (a as any).startAt ??
-      (a as any).start ??
-      (a as any).date ?? null;
-
-    const status =
-      (a as any).status ??
-      (a as any).situation ??
-      "PENDENTE";
-
-    // service/professional/title -> mantém compatibilidade
-    const serviceName =
-      (a as any).service?.name ??
-      (a as any).serviceName ??
-      (a as any).title ??
-      "Serviço";
-
-    const professionalName =
-      (a as any).professional?.name ??
-      (a as any).professionalName ??
-      "—";
-
-    // Gera "date" e "time" que a UI já usa
-    let dateStr = "";
-    let timeStr = "";
-    if (start) {
-      const d = new Date(start);
-      if (!isNaN(d.getTime())) {
-        // "YYYY-MM-DD"
-        dateStr = d.toISOString().slice(0, 10);
-        // "HH:mm" (pt-BR)
-        timeStr = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-      }
-    }
-
-    return {
-      id: (a as any).id ?? (a as any).appointmentId ?? String(Math.random()),
-      service: { name: String(serviceName) },
-      professional: { name: String(professionalName) },
-      date: dateStr,
-      time: timeStr,
-      status: String(status).toUpperCase().includes("CONFIRM")
-        ? "CONFIRMADO"
-        : "PENDENTE",
-    };
-  }
-
-  function mapFavoriteToUI(f: ApiFavorite): UIFavorite {
-    return {
-      name: (f as any).name ?? (f as any).serviceName ?? "Serviço",
-      count: Number((f as any).count ?? (f as any).timesUsed ?? 0),
-      rating: (f as any).rating ?? undefined,
-    };
-  }
-
   useEffect(() => {
-    // userId é opcional; se não existir, o serviço envia sem query param
-    const userId = user?.id ? Number(user.id) : undefined;
-
     const load = async () => {
+      if (!clienteId) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
+        const agendamentos = await AgendamentoService.listarMeus(clienteId);
 
-        const [apiStats, apiAppts, apiFavs] = await Promise.all([
-          ClienteService.getDashboardStats(userId as any),
-          ClienteService.getUpcomingAppointments(userId as any),
-          // Se seu serviço não aceitar userId aqui, tudo bem — enviamos e ele ignora.
-          (ClienteService as any).getFavoriteServices(userId as any) ?? ClienteService.getFavoriteServices(),
-        ]);
+        const favorites = buildFavoriteServices(agendamentos);
+        setFavoriteServices(favorites);
 
-        const favsUI = (apiFavs ?? []).map(mapFavoriteToUI);
-        setFavoriteServices(favsUI);
+        setStats({
+          totalAgendamentos: agendamentos.length,
+          totalHoras: calculateBeautyHours(agendamentos),
+          totalFavoritos: favorites.length,
+        });
 
-        const apptsUI = (apiAppts ?? []).map(mapAppointmentToUI);
-        setNextAppointments(apptsUI);
-
-        setStats(mapStatsToUI(apiStats ?? null, favsUI));
+        setNextAppointments(buildUpcomingAppointments(agendamentos));
       } catch (err) {
         console.error("Erro ao carregar dados do dashboard:", err);
-        // Mantém UI estável mesmo com erro
         setStats({ totalAgendamentos: 0, totalHoras: 0, totalFavoritos: 0 });
         setNextAppointments([]);
         setFavoriteServices([]);
@@ -168,8 +83,88 @@ const Dashboard: React.FC = () => {
     };
 
     void load();
-    // NÃO dependa estritamente de user?.id para não travar o loading
-  }, [user?.id]);
+  }, [clienteId]);
+
+  function buildFavoriteServices(list: Agendamento[]): UIFavorite[] {
+    const counter = new Map<string, number>();
+    list.forEach((appointment) => {
+      appointment.servicos.forEach((service) => {
+        const name = service.nome ?? "Serviço";
+        counter.set(name, (counter.get(name) ?? 0) + 1);
+      });
+    });
+
+    return Array.from(counter.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({ name, count }));
+  }
+
+  function buildUpcomingAppointments(list: Agendamento[]): UIAppointment[] {
+    const now = Date.now();
+    return list
+      .map((appointment) => ({
+        raw: appointment,
+        date: new Date(appointment.dataHora),
+      }))
+      .filter(({ date }) => !Number.isNaN(date.getTime()) && date.getTime() >= now)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 3)
+      .map(({ raw, date }) => ({
+        id: raw.id,
+        service: { name: raw.servicos[0]?.nome ?? "Serviço" },
+        professional: { name: "Equipe Akari" },
+        date: date.toISOString(),
+        time: date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+        status: raw.status === "CONFIRMADO" ? "CONFIRMADO" : "PENDENTE",
+      }));
+  }
+
+  function calculateBeautyHours(list: Agendamento[]): number {
+    const totalMinutes = list.reduce((minutesAcc, appointment) => {
+      if (!isCompletedStatus(appointment.status)) {
+        return minutesAcc;
+      }
+
+      const appointmentMinutes = appointment.servicos.reduce((serviceAcc, service) => {
+        return serviceAcc + extractServiceDuration(service);
+      }, 0);
+
+      const effectiveMinutes = appointmentMinutes > 0 ? appointmentMinutes : DEFAULT_SERVICE_DURATION_MINUTES;
+      return minutesAcc + effectiveMinutes;
+    }, 0);
+
+    if (totalMinutes === 0) {
+      return 0;
+    }
+
+    return Math.round((totalMinutes / 60) * 10) / 10;
+  }
+
+  function extractServiceDuration(service: Agendamento["servicos"][number]): number {
+    const rawDuration =
+      service.duracao ??
+      service.duration ??
+      service.duracaoMinutos ??
+      service.duracaoMin ??
+      service.tempoEstimado ??
+      service.tempo ??
+      service.tempoServico;
+
+    if (typeof rawDuration === "number" && Number.isFinite(rawDuration) && rawDuration > 0) {
+      return rawDuration;
+    }
+
+    return 0;
+  }
+
+  function isCompletedStatus(status: string | undefined): boolean {
+    if (!status) {
+      return false;
+    }
+
+    return COMPLETED_STATUSES.has(status.toUpperCase());
+  }
 
   if (isLoading) {
     return (

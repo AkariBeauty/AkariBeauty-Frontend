@@ -1,5 +1,5 @@
 // src/pages/Client/Booking/steps/DateTimeSelection.tsx
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { format, addDays, isSameDay, isToday, isBefore } from 'date-fns';
 import { Calendar, Clock } from '@phosphor-icons/react';
 import { Service, Professional } from '../../../../types'; // Verifique o caminho aqui
@@ -34,6 +34,18 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
     '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'
   ];
   const dates = generateDates();
+
+  const now = useMemo(() => new Date(), []);
+
+  const isTimeDisabled = (time: string) => {
+    if (!selectedDate) return false;
+    if (!isToday(selectedDate)) return false;
+
+    const [hours, minutes] = time.split(':').map(Number);
+    const candidate = new Date(selectedDate);
+    candidate.setHours(hours, minutes, 0, 0);
+    return candidate <= now;
+  };
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
@@ -115,19 +127,25 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            {availableTimes.map((time) => (
-              <button
-                key={time}
-                onClick={() => handleTimeSelect(time)}
-                className={`p-3 rounded-xl text-center font-medium transition-all ${
-                  selectedTime === time
-                    ? 'bg-gradient-to-br from-bolt-primary-500 to-bolt-secondary-500 text-white shadow-lg' // RENOMEADO AQUI
-                    : 'bg-bolt-neutral-50 text-bolt-neutral-700 hover:bg-bolt-primary-50 hover:text-bolt-primary-700' // RENOMEADO AQUI
-                }`}
-              >
-                {time}
-              </button>
-            ))}
+            {availableTimes.map((time) => {
+              const disabled = isTimeDisabled(time);
+              return (
+                <button
+                  key={time}
+                  onClick={() => !disabled && handleTimeSelect(time)}
+                  disabled={disabled}
+                  className={`p-3 rounded-xl text-center font-medium transition-all ${
+                    disabled
+                      ? 'bg-bolt-neutral-100 text-bolt-neutral-400 cursor-not-allowed'
+                      : selectedTime === time
+                      ? 'bg-gradient-to-br from-bolt-primary-500 to-bolt-secondary-500 text-white shadow-lg'
+                      : 'bg-bolt-neutral-50 text-bolt-neutral-700 hover:bg-bolt-primary-50 hover:text-bolt-primary-700'
+                  }`}
+                >
+                  {time}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

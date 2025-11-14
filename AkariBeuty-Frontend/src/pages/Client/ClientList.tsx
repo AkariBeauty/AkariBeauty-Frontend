@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { Cliente, ClienteService } from "../../services/clienteService";
 import Button from "../../components/Button";
+import ConfirmDialog from "../../components/UI/ConfirmDialog";
+import { showError, showSuccess } from "../../utils/toast";
 
 export default function ClientesList() {
   const [data, setData] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clientToDelete, setClientToDelete] = useState<Cliente | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function fetchAll() {
     setLoading(true);
@@ -13,20 +17,31 @@ export default function ClientesList() {
       setData(res);
     } catch (e) {
       console.error("Erro ao listar clientes", e);
+      showError("Não foi possível carregar os clientes.");
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm("Deseja remover este cliente?")) return;
+  const requestDelete = (cliente: Cliente) => {
+    setClientToDelete(cliente);
+  };
+
+  const confirmDelete = async () => {
+    if (!clientToDelete) return;
     try {
-      await ClienteService.remove(id);
+      setDeleting(true);
+      await ClienteService.remove(clientToDelete.id);
       await fetchAll();
+      showSuccess("Cliente removido com sucesso.");
     } catch (e) {
       console.error("Erro ao remover", e);
+      showError("Não foi possível remover o cliente.");
+    } finally {
+      setDeleting(false);
+      setClientToDelete(null);
     }
-  }
+  };
 
   useEffect(() => {
     fetchAll();
@@ -69,7 +84,7 @@ export default function ClientesList() {
                       Editar
                     </a>
                     <button
-                      onClick={() => handleDelete(c.id)}
+                      onClick={() => requestDelete(c)}
                       className="px-3 py-1 rounded bg-red-600 text-white"
                     >
                       Remover
@@ -88,6 +103,16 @@ export default function ClientesList() {
           </table>
         </div>
       )}
+      <ConfirmDialog
+        open={Boolean(clientToDelete)}
+        title="Remover cliente"
+        description={clientToDelete ? `Remover ${clientToDelete.nome}?` : undefined}
+        confirmLabel="Remover"
+        cancelLabel="Cancelar"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setClientToDelete(null)}
+      />
     </div>
   );
 }

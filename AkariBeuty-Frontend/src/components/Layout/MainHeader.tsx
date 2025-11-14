@@ -21,7 +21,7 @@ export default function MainHeader() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/login');
   };
 
   const toggleMobileMenu = () => {
@@ -37,7 +37,7 @@ export default function MainHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to={user ? '/cliente/dashboard' : '/'} className="flex items-center space-x-2">
             <div className="w-10 h-10 bg-gradient-to-br from-bolt-primary-500 to-bolt-secondary-500 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-xl">A</span>
             </div>
@@ -84,17 +84,17 @@ export default function MainHeader() {
                   <span>Agendar</span>
                 </Link>
 
-                                                   <Link
-                   to="/cliente/appointments"
-                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                     location.pathname.startsWith('/cliente/appointments')
-                       ? 'text-bolt-primary-600 bg-bolt-primary-50'
-                       : 'text-bolt-neutral-600 hover:text-bolt-primary-600 hover:bg-bolt-primary-50'
-                   }`}
-                 >
-                   <Calendar size={20} />
-                   <span>Meus Agendamentos</span>
-                 </Link>
+                <Link
+                  to="/cliente/agendamentos"
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                    location.pathname.startsWith('/cliente/agendamentos')
+                      ? 'text-bolt-primary-600 bg-bolt-primary-50'
+                      : 'text-bolt-neutral-600 hover:text-bolt-primary-600 hover:bg-bolt-primary-50'
+                  }`}
+                >
+                  <Calendar size={20} />
+                  <span>Meus Agendamentos</span>
+                </Link>
 
                 <Link
                   to="/cliente/profile"
@@ -208,10 +208,10 @@ export default function MainHeader() {
                   </Link>
 
                   <Link
-                    to="/cliente/appointments"
+                    to="/cliente/agendamentos"
                     onClick={closeMobileMenu}
                     className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
-                      location.pathname.startsWith('/cliente/appointments')
+                      location.pathname.startsWith('/cliente/agendamentos')
                         ? 'text-bolt-primary-600 bg-bolt-primary-50'
                         : 'text-bolt-neutral-600 hover:text-bolt-primary-600 hover:bg-bolt-primary-50'
                     }`}

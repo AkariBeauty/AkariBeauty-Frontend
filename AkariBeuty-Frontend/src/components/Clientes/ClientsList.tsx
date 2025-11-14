@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { Cliente } from "../../services/clientCrudService";
 import { clienteService } from "../../services/clientCrudService";
+import ConfirmDialog from "../UI/ConfirmDialog";
+import { showError, showSuccess } from "../../utils/toast";
 export default function ClientsList() {
   const [data, setData] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clientToDelete, setClientToDelete] = useState<Cliente | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const nav = useNavigate();
 
   async function fetchData() {
@@ -12,6 +16,9 @@ export default function ClientsList() {
     try {
       const res = await clienteService.getAll();
       setData(res);
+    } catch (error) {
+      console.error("Erro ao carregar clientes", error);
+      showError("Não foi possível carregar os clientes.");
     } finally {
       setLoading(false);
     }
@@ -19,11 +26,25 @@ export default function ClientsList() {
 
   useEffect(() => { fetchData(); }, []);
 
-  async function onDelete(id: number) {
-    if (!confirm("Confirma excluir este cliente?")) return;
-    await clienteService.delete(id);
-    await fetchData();
-  }
+  const requestDelete = (cliente: Cliente) => {
+    setClientToDelete(cliente);
+  };
+
+  const confirmDelete = async () => {
+    if (!clientToDelete) return;
+    try {
+      setDeleting(true);
+      await clienteService.delete(clientToDelete.id);
+      await fetchData();
+      showSuccess("Cliente excluído com sucesso.");
+    } catch (error) {
+      console.error("Erro ao excluir cliente", error);
+      showError("Não foi possível excluir o cliente.");
+    } finally {
+      setDeleting(false);
+      setClientToDelete(null);
+    }
+  };
 
   if (loading) return <div className="p-4">Carregando…</div>;
 
@@ -58,13 +79,24 @@ export default function ClientsList() {
                 <td className="p-2">{c.cidade}/{c.uf}</td>
                 <td className="p-2 text-right space-x-2">
                   <Link className="underline" to={`/clientes/${c.id}`}>Editar</Link>
-                  <button className="text-red-600" onClick={() => onDelete(c.id)}>Excluir</button>
+                  <button className="text-red-600" onClick={() => requestDelete(c)}>Excluir</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
+
+      <ConfirmDialog
+        open={Boolean(clientToDelete)}
+        title="Excluir cliente"
+        description={clientToDelete ? `Excluir ${clientToDelete.nome}?` : undefined}
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setClientToDelete(null)}
+      />
     </div>
   );
 }

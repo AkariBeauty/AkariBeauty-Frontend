@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import Routers from "./routes";
+import AppToaster from "./components/UI/AppToaster";
 
 console.log("Iniciando aplicação...");
 
@@ -25,6 +26,7 @@ if (!rootEl) {
            aqui mantemos dentro para ter acesso ao useLocation, se necessário */}
         <AuthProvider>
           <Routers />
+          <AppToaster />
         </AuthProvider>
       </BrowserRouter>
     </React.StrictMode>

@@ -4,6 +4,7 @@ import { AgendamentoService } from "../../services/agendamentoService";
 import Button from "../../components/Button";
 import { useAuth } from "../../contexts/AuthContext";
 import { servicoService, type Servico } from "../../services/servicoService";
+import { showError, showSuccess } from "../../utils/toast";
 
 export default function NovoAgendamento() {
   const { user } = useAuth();
@@ -37,14 +38,19 @@ export default function NovoAgendamento() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!clienteId) return alert("Faça login primeiro.");
+    if (!clienteId) {
+      showError("Faça login primeiro.");
+      return;
+    }
     if (!form.servicoId || !form.data || !form.hora) {
-      return alert("Selecione um serviço, data e horário.");
+      showError("Selecione um serviço, data e horário.");
+      return;
     }
 
     const dataHora = new Date(`${form.data}T${form.hora}`);
     if (isNaN(dataHora.getTime())) {
-      return alert("Data ou horário inválido.");
+      showError("Data ou horário inválido.");
+      return;
     }
     setSaving(true);
     try {
@@ -54,11 +60,11 @@ export default function NovoAgendamento() {
         dataHora: dataHora.toISOString(),
         observacao: form.observacao || undefined,
       });
-      alert("Agendamento criado com sucesso!");
+      showSuccess("Agendamento criado com sucesso!");
       setForm({ servicoId: "", data: "", hora: "", observacao: "" });
     } catch (e) {
       console.error(e);
-      alert("Falha ao agendar.");
+      showError("Falha ao agendar.");
     } finally {
       setSaving(false);
     }

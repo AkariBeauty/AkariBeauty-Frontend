@@ -122,7 +122,7 @@ const LoginClient: React.FC = () => {
             )}
           </button>
 
-          {/* Demo Credentials */}
+          Demo Credentials
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800 font-medium mb-2">
               💡 Credenciais de Demonstração:

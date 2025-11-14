@@ -1,13 +1,35 @@
 import BaseService from "./Generic/BaseService";
 
+export type AgendamentoStatus =
+  | "PENDENTE"
+  | "CONFIRMADO"
+  | "CANCELADO"
+  | "AUSENTE"
+  | "COBRADO"
+  | "REALIZADO"
+  | "CANCELADO_EMPRESA";
+
+export type AgendamentoServico = {
+  id: number;
+  nome: string;
+  duracao?: number | null;
+  duration?: number | null;
+  duracaoMinutos?: number | null;
+  duracaoMin?: number | null;
+  tempoEstimado?: number | null;
+  tempo?: number | null;
+  tempoServico?: number | null;
+};
+
 export type Agendamento = {
   id: number;
   clienteId: number;
   dataHora: string;
-  status: "PENDENTE" | "CONFIRMADO" | "CANCELADO" | "CONCLUIDO";
+  status: AgendamentoStatus;
   valor: number;
   comissao: number;
-  servicos: { id: number; nome: string }[];
+  servicos: AgendamentoServico[];
+  observacao?: string | null;
 };
 
 type CriarAgendamentoPayload = {

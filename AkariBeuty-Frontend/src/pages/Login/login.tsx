@@ -86,7 +86,6 @@ export default function FormLogin() {
 
     return (
         <div className="flex flex-col w-full h-full justify-evenly text-center justify-items-center mt-[3%] mb-[5%]">
-            {/* ... o restante do seu JSX continua aqui ... */}
             <div className="text-center flex flex-col mt-[5%]">
                 <span className="text-4xl font-bold ">Bem-vindo</span>
                 <span>Entre com sua conta para continuar</span>
@@ -110,7 +109,7 @@ export default function FormLogin() {
                 <InputLogin
                     id="senha"
                     action={(text) => setPassword(text)}
-                    value={password} // <-- 3. Corrigido de 'senha' para 'password'
+                    value={password}
                     label="Senha"
                     type="password"
                     placeholder="Insira sua senha..."
@@ -141,20 +140,6 @@ export default function FormLogin() {
                      )}
                  </button>
              </div>
-            
-            <div className="w-full text-center mt-5">
-                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mx-10">
-                     <p className="text-sm text-blue-800 font-medium mb-2">
-                         💡 Credenciais do Banco de Dados:
-                     </p>
-                     <div className="text-xs text-blue-700 space-y-1">
-                         <p><strong>Joana:</strong> joana@gmail.com / 1234</p>
-                         <p><strong>Marcos:</strong> marcos / abcd</p>
-                         <p><strong>Ana:</strong> ana.costa / senha123</p>
-                     </div>
-                 </div>
-             </div>
-
             <AlertModal isOpen={modalError} show={setModalError} message="Login ou senha inválidos!" />
         </div>
     );

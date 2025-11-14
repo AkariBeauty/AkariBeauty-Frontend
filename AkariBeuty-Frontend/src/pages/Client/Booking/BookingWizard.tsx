@@ -7,6 +7,7 @@ import ProfessionalSelection from "./steps/ProfessionalSelection";
 import DateTimeSelection from "./steps/DateTimeSelection";
 import BookingConfirmation from "./steps/BookingConfirmation";
 import type { BookingData, Professional, Service } from "../../../types";
+import { showError, showSuccess } from "../../../utils/toast";
 
 const steps = ["Serviço", "Profissional", "Data e horário", "Confirmação"] as const;
 
@@ -56,18 +57,24 @@ export default function BookingWizard() {
 
   const handleConfirm = async () => {
     if (!clienteId) {
-      alert("Não foi possível identificar o cliente logado. Faça login novamente.");
+      showError("Não foi possível identificar o cliente logado. Faça login novamente.");
       logout();
       navigate("/login", { replace: true });
       return;
     }
 
     if (!selectedService || !date || !time) {
-      alert("Informe serviço, profissional, data e horário antes de confirmar.");
+      showError("Informe serviço, profissional, data e horário antes de confirmar.");
       return;
     }
 
-    const iso = new Date(`${date}T${time}:00`).toISOString();
+    const selectedDateTime = new Date(`${date}T${time}:00`);
+    if (Number.isNaN(selectedDateTime.getTime()) || selectedDateTime <= new Date()) {
+      showError("Selecione um horário futuro para concluir o agendamento.");
+      return;
+    }
+
+    const iso = selectedDateTime.toISOString();
 
     try {
       await AgendamentoService.criar({
@@ -77,11 +84,15 @@ export default function BookingWizard() {
         observacao: undefined,
       });
 
-      alert("Agendamento criado com sucesso!");
+      showSuccess("Agendamento criado com sucesso!");
       navigate("/cliente/agendamentos");
     } catch (error) {
       console.error("Erro ao criar agendamento", error);
-      alert("Não foi possível criar o agendamento.");
+
+      const message =
+        (error as { response?: { data?: unknown } })?.response?.data ??
+        "Não foi possível criar o agendamento.";
+      showError(typeof message === "string" ? message : "Não foi possível criar o agendamento.");
     }
   };
 

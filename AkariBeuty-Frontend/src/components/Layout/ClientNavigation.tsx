@@ -7,7 +7,7 @@ const ClientNavigation: React.FC = () => {
   const navItems = [
     { icon: House, label: 'Início', path: '/cliente/dashboard' },
     { icon: Calendar, label: 'Agendar', path: '/cliente/booking' },
-    { icon: ClockCounterClockwise, label: 'Agendamentos', path: '/cliente/appointments' },
+    { icon: ClockCounterClockwise, label: 'Agendamentos', path: '/cliente/agendamentos' },
     { icon: User, label: 'Perfil', path: '/cliente/profile' },
   ];
 
