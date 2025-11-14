@@ -8,6 +8,7 @@ import ClientLayout from "./components/Layout/ClientLayout";
 import Dashboard from "./pages/Client/Dashboard";
 import Profile from "./pages/Client/Profile";
 import BookingWizard from "./pages/Client/Booking/BookingWizard";
+import Login from "./pages/Login";
 
 // Clientes
 import ClientesList from "./pages/Client/ClientList";
@@ -20,6 +21,9 @@ import NovoAgendamento from "./pages/Agendamentos/NovoAgendamento";
 export default function Routers() {
   return (
     <Routes>
+      {/* Login público */}
+      <Route path="/login" element={<Login />} />
+
       {/* Redireciona raiz para a área do cliente */}
       <Route path="/" element={<Navigate to="/cliente" replace />} />
 
@@ -48,7 +52,7 @@ export default function Routers() {
       </Route>
 
       {/* 404 simples (opcional) */}
-      <Route path="*" element={<Navigate to="/cliente" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

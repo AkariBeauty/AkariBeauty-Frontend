@@ -1,37 +1,61 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AgendamentoService } from "../../services/agendamentoService";
-import InputLogin from "../../components/InputLogin";
 import Button from "../../components/Button";
 import { useAuth } from "../../contexts/AuthContext";
+import { servicoService, type Servico } from "../../services/servicoService";
 
 export default function NovoAgendamento() {
   const { user } = useAuth();
   const [form, setForm] = useState({
-    empresaId: "",
-    profissionalId: "",
     servicoId: "",
-    dataHoraInicio: "",
-    dataHoraFim: "",
+    data: "",
+    hora: "",
     observacao: "",
   });
   const [saving, setSaving] = useState(false);
+  const [servicos, setServicos] = useState<Servico[]>([]);
+  const clienteId = useMemo(() => {
+    if (!user) return 0;
+    const raw = (user as any)?.id;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }, [user]);
+
+  useEffect(() => {
+    const carregarServicos = async () => {
+      try {
+        const lista = await servicoService.getAll();
+        setServicos(lista);
+      } catch (error) {
+        console.error("Falha ao carregar serviços", error);
+      }
+    };
+
+    carregarServicos();
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return alert("Faça login primeiro.");
+    if (!clienteId) return alert("Faça login primeiro.");
+    if (!form.servicoId || !form.data || !form.hora) {
+      return alert("Selecione um serviço, data e horário.");
+    }
+
+    const dataHora = new Date(`${form.data}T${form.hora}`);
+    if (isNaN(dataHora.getTime())) {
+      return alert("Data ou horário inválido.");
+    }
     setSaving(true);
     try {
       await AgendamentoService.criar({
-        clienteId: (user as any).id ?? 0, 
-        empresaId: parseInt(form.empresaId),
-        profissionalId: parseInt(form.profissionalId),
+        clienteId,
         servicoId: parseInt(form.servicoId),
-        dataHoraInicio: form.dataHoraInicio,
-        dataHoraFim: form.dataHoraFim,
+        dataHora: dataHora.toISOString(),
         observacao: form.observacao || undefined,
-      } as any);
-      alert("Agendado com sucesso!");
+      });
+      alert("Agendamento criado com sucesso!");
+      setForm({ servicoId: "", data: "", hora: "", observacao: "" });
     } catch (e) {
       console.error(e);
       alert("Falha ao agendar.");
@@ -45,15 +69,54 @@ export default function NovoAgendamento() {
       <h1 className="text-2xl font-bold mb-4">Novo Agendamento</h1>
       <form onSubmit={onSubmit} className="bg-white p-4 rounded shadow space-y-4 max-w-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputLogin id="empresaId" label="Empresa Id" type="text" value={form.empresaId} action={(v) => setForm({ ...form, empresaId: v })}/>
-          <InputLogin id="profissionalId" label="Profissional Id" type="text" value={form.profissionalId} action={(v) => setForm({ ...form, profissionalId: v })}/>
-          <InputLogin id="servicoId" label="Serviço Id" type="text" value={form.servicoId} action={(v) => setForm({ ...form, servicoId: v })}/>
-          <InputLogin id="inicio" label="Início (ISO)" type="text" placeholder="2025-11-10T14:00:00Z" value={form.dataHoraInicio} action={(v) => setForm({ ...form, dataHoraInicio: v })}/>
-          <InputLogin id="fim" label="Fim (ISO)" type="text" placeholder="2025-11-10T15:00:00Z" value={form.dataHoraFim} action={(v) => setForm({ ...form, dataHoraFim: v })}/>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-gray-700">Serviço</span>
+            <select
+              value={form.servicoId}
+              onChange={(e) => setForm({ ...form, servicoId: e.target.value })}
+              className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">Selecione um serviço</option>
+              {servicos.map((servico) => (
+                <option key={servico.id} value={servico.id}>
+                  {servico.servicoPrestado} — R$ {servico.valorBase.toFixed(2)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-gray-700">Data</span>
+            <input
+              type="date"
+              value={form.data}
+              onChange={(e) => setForm({ ...form, data: e.target.value })}
+              className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </label>
+
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-gray-700">Horário</span>
+            <input
+              type="time"
+              value={form.hora}
+              onChange={(e) => setForm({ ...form, hora: e.target.value })}
+              className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </label>
+
+          <label className="flex flex-col gap-2 md:col-span-2">
+            <span className="text-sm font-medium text-gray-700">Observação (opcional)</span>
+            <textarea
+              value={form.observacao}
+              onChange={(e) => setForm({ ...form, observacao: e.target.value })}
+              className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              rows={3}
+            />
+          </label>
         </div>
-        <InputLogin id="obs" label="Observação" type="text" value={form.observacao} action={(v) => setForm({ ...form, observacao: v })}/>
         <div className="flex gap-3">
-          <Button label="Salvar" background="bg-primary" color="text-white" action={() => {}} />
+          <Button label="Limpar" background="bg-gray-200" color="text-gray-700" action={() => setForm({ servicoId: "", data: "", hora: "", observacao: "" })} />
           <button type="submit" className="px-4 py-2 rounded bg-primary text-white" disabled={saving}>
             {saving ? "Salvando..." : "Agendar"}
           </button>

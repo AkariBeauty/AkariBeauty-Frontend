@@ -3,12 +3,17 @@ import BaseService from "./Generic/BaseService";
 export type Agendamento = {
   id: number;
   clienteId: number;
-  empresaId: number;
-  profissionalId: number;
-  servicoId: number;
-  dataHoraInicio: string;
-  dataHoraFim: string;
+  dataHora: string;
   status: "PENDENTE" | "CONFIRMADO" | "CANCELADO" | "CONCLUIDO";
+  valor: number;
+  comissao: number;
+  servicos: { id: number; nome: string }[];
+};
+
+type CriarAgendamentoPayload = {
+  clienteId: number;
+  servicoId: number;
+  dataHora: string;
   observacao?: string;
 };
 
@@ -18,13 +23,18 @@ export const AgendamentoService = {
     if (params?.inicio) query.set("inicio", params.inicio);
     if (params?.fim) query.set("fim", params.fim);
     const qs = query.toString() ? `?${query.toString()}` : "";
-    return await new BaseService({
+    const response = await new BaseService({
       method: "get",
       url: `agendamento/cliente/${clienteId}${qs}`,
     }).request<Agendamento[]>();
+
+    return response.map((item) => ({
+      ...item,
+      dataHora: String(item.dataHora),
+    }));
   },
 
-  async criar(payload: Omit<Agendamento, "id" | "status">) {
+  async criar(payload: CriarAgendamentoPayload) {
     return await new BaseService({
       method: "post",
       url: `agendamento`,
