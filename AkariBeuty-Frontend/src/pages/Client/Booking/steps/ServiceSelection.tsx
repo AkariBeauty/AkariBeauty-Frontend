@@ -1,71 +1,69 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// src/pages/Client/Booking/steps/ServiceSelection.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Scissors, Palette, Hand, Star, Clock } from '@phosphor-icons/react';
 import { Service } from '../../../../types';
+import { servicoService, type Servico } from '../../../../services/servicoService';
+import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
+import { showError } from '../../../../utils/toast';
 
 interface ServiceSelectionProps {
   onServiceSelect: (service: Service) => void;
 }
 
+const DEFAULT_DURATION = 60;
+
 const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelect }) => {
-  // Dados mockados para demonstração
-  const mockServices: Service[] = [
-    {
-      id: 1,
-      name: 'Corte de Cabelo',
-      description: 'Corte moderno e estiloso',
-      duration: 60,
-      price: 80.00,
-      category: 'Cabelo',
-      image: undefined
-    },
-    {
-      id: 2,
-      name: 'Coloração',
-      description: 'Coloração completa com produtos de qualidade',
-      duration: 120,
-      price: 150.00,
-      category: 'Cabelo',
-      image: undefined
-    },
-    {
-      id: 3,
-      name: 'Manicure',
-      description: 'Manicure completa com esmaltação',
-      duration: 45,
-      price: 35.00,
-      category: 'Unhas',
-      image: undefined
-    },
-    {
-      id: 4,
-      name: 'Pedicure',
-      description: 'Pedicure completa com esmaltação',
-      duration: 60,
-      price: 45.00,
-      category: 'Unhas',
-      image: undefined
-    },
-    {
-      id: 5,
-      name: 'Design de Sobrancelhas',
-      description: 'Design e modelagem de sobrancelhas',
-      duration: 30,
-      price: 25.00,
-      category: 'Estética',
-      image: undefined
-    },
-    {
-      id: 6,
-      name: 'Limpeza de Pele',
-      description: 'Limpeza facial profunda',
-      duration: 90,
-      price: 120.00,
-      category: 'Estética',
-      image: undefined
-    }
-  ];
+  const [services, setServices] = useState<Servico[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        setIsLoading(true);
+        setHasError(false);
+        const data = await servicoService.getAll();
+        setServices(data);
+      } catch (error) {
+        console.error('Erro ao carregar serviços', error);
+        showError('Não foi possível carregar os serviços.');
+        setHasError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadServices();
+  }, []);
+
+  const groupedServices = useMemo(() => {
+    return services.reduce((acc, service) => {
+      const categoryName = service.categoriaServico?.nome ?? 'Outros serviços';
+      if (!acc[categoryName]) {
+        acc[categoryName] = [];
+      }
+      acc[categoryName].push(service);
+      return acc;
+    }, {} as Record<string, Servico[]>);
+  }, [services]);
+
+  const resolveDuration = (service: Servico) => {
+    const raw = service.tempo;
+    return typeof raw === 'number' && raw > 0 ? raw : DEFAULT_DURATION;
+  };
+
+  const handleSelect = (service: Servico) => {
+    const mapped: Service = {
+      id: service.id,
+      name: service.servicoPrestado,
+      description: service.descricao,
+      duration: resolveDuration(service),
+      price: service.valorBase,
+      category: service.categoriaServico?.nome ?? 'Serviço',
+      image: undefined,
+    };
+
+    onServiceSelect(mapped);
+  };
 
   const getCategoryIcon = (category: string) => {
     const cat = category.toLowerCase();
@@ -83,13 +81,45 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelect }) 
     return 'from-gray-400 to-gray-600';
   };
 
-  const groupedServices = mockServices.reduce((acc, service) => {
-    if (!acc[service.category]) {
-      acc[service.category] = [];
-    }
-    acc[service.category].push(service);
-    return acc;
-  }, {} as Record<string, Service[]>);
+  const formatCurrency = (value: number | undefined) => {
+    const parsed = Number(value ?? 0);
+    return parsed.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+    });
+  };
+
+  const formatDuration = (service: Servico) => {
+    const parsed = resolveDuration(service);
+    return `${parsed} min`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <LoadingSpinner size="lg" />
+        <p className="mt-3 text-bolt-neutral-500">Carregando serviços...</p>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="text-center py-10 text-bolt-neutral-500">
+        <p className="mb-2">Não foi possível carregar os serviços.</p>
+        <p className="text-sm">Tente novamente em instantes.</p>
+      </div>
+    );
+  }
+
+  if (services.length === 0) {
+    return (
+      <div className="text-center py-10 text-bolt-neutral-500">
+        <p>Nenhum serviço disponível no momento.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -98,7 +128,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelect }) 
         <p className="text-bolt-neutral-600">Selecione o serviço que deseja agendar</p>
       </div>
 
-      {Object.entries(groupedServices).map(([category, services]) => {
+      {Object.entries(groupedServices).map(([category, categoryServices]) => {
         const IconComponent = getCategoryIcon(category);
         const colorClass = getCategoryColor(category);
 
@@ -115,30 +145,30 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelect }) 
             </div>
 
             <div className="grid gap-3">
-              {services.map((service) => (
+              {categoryServices.map((service) => (
                 <button
                   key={service.id}
-                  onClick={() => onServiceSelect(service)}
+                  onClick={() => handleSelect(service)}
                   className="text-left p-4 border border-bolt-neutral-200 rounded-xl hover:border-bolt-primary-300 hover:bg-bolt-primary-50 transition-all"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h4 className="font-medium text-bolt-neutral-900 mb-1">
-                        {service.name}
+                        {service.servicoPrestado}
                       </h4>
                       <p className="text-sm text-bolt-neutral-600 mb-2">
-                        {service.description}
+                        {service.descricao}
                       </p>
                       <div className="flex items-center gap-4 text-xs text-bolt-neutral-500">
                         <div className="flex items-center gap-1">
                           <Clock size={14} />
-                          <span>{service.duration} min</span>
+                          <span>{formatDuration(service)}</span>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-bolt-primary-600">
-                        R$ {service.price.toFixed(2).replace('.', ',')}
+                        {formatCurrency(service.valorBase)}
                       </p>
                     </div>
                   </div>

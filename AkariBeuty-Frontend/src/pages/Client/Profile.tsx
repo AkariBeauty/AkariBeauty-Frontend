@@ -44,13 +44,24 @@ export default function Profile() {
 
   const mapClienteToProfile = (cliente: Cliente | null): ProfileFormState | null => {
     if (!cliente) return null;
+    const fallback = cliente as Record<string, unknown>;
+
+    const numeroRaw = fallback.numero;
+
     return {
       ...defaultProfile,
-      id: Number(cliente.id ?? 0),
-      nome: cliente.name ?? "",
-      email: cliente.email ?? "",
-      telefone: cliente.phone ?? "",
-      cpf: cliente.document ?? "",
+      id: Number(cliente.id ?? fallback.id ?? 0),
+      nome: (cliente.name ?? fallback.nome ?? "") as string,
+      email: (cliente.email ?? fallback.email ?? "") as string,
+      telefone: (cliente.phone ?? fallback.telefone ?? "") as string,
+      cpf: (cliente.document ?? fallback.cpf ?? "") as string,
+      uf: (fallback.uf ?? "") as string,
+      cidade: (fallback.cidade ?? "") as string,
+      bairro: (fallback.bairro ?? "") as string,
+      rua: (fallback.rua ?? "") as string,
+      numero: typeof numeroRaw === "number"
+        ? (numeroRaw as number)
+        : numeroRaw ? Number(numeroRaw) || undefined : undefined,
     };
   };
 
@@ -58,8 +69,7 @@ export default function Profile() {
     const load = async () => {
       try {
         setLoading(true);
-        const statsPromise = clienteService.getProfileStats().catch(() => null);
-        const profilePromise = clienteService
+        const profileData = await clienteService
           .getProfile()
           .catch(async () => {
             if (!user?.id) return null;
@@ -71,11 +81,19 @@ export default function Profile() {
             }
           });
 
-        const [profileData, statsData] = await Promise.all([profilePromise, statsPromise]);
-
         if (profileData) {
           setProfile(profileData);
           setPristineProfile(profileData);
+          setStats((prev) => prev ?? {
+            id: profileData.id,
+            name: profileData.nome,
+            email: profileData.email,
+            phone: profileData.telefone ?? "",
+            memberSince: new Date().toISOString(),
+            totalAppointments: 0,
+            favoriteServices: [],
+            averageRating: 0,
+          });
         } else if (user?.id) {
           const byId = await clienteService
             .getById(user.id)
@@ -84,6 +102,16 @@ export default function Profile() {
           if (byId) {
             setProfile(byId);
             setPristineProfile(byId);
+            setStats((prev) => prev ?? {
+              id: byId.id,
+              name: byId.nome,
+              email: byId.email,
+              phone: byId.telefone ?? "",
+              memberSince: new Date().toISOString(),
+              totalAppointments: 0,
+              favoriteServices: [],
+              averageRating: 0,
+            });
           } else {
             const fallback: ProfileFormState = {
               ...defaultProfile,
@@ -94,10 +122,18 @@ export default function Profile() {
             };
             setProfile(fallback);
             setPristineProfile(fallback);
+            setStats((prev) => prev ?? {
+              id: fallback.id,
+              name: fallback.nome,
+              email: fallback.email,
+              phone: fallback.telefone ?? "",
+              memberSince: new Date().toISOString(),
+              totalAppointments: 0,
+              favoriteServices: [],
+              averageRating: 0,
+            });
           }
         }
-
-        if (statsData) setStats(statsData);
       } finally {
         setLoading(false);
       }

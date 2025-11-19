@@ -7,18 +7,21 @@ import LoadingSpinner from '../../../../components/UI/LoadingSpinner'; // Verifi
 
 interface BookingConfirmationProps {
   bookingData: BookingData;
-  onConfirm: () => void;
+  notes: string;
+  onNotesChange: (value: string) => void;
+  onConfirm: () => Promise<void>;
 }
 
-const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ bookingData, onConfirm }) => {
-  const [notes, setNotes] = useState('');
+const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ bookingData, notes, onNotesChange, onConfirm }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirm = async () => {
-    setIsLoading(true);
-    // Simular delay da API
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    onConfirm();
+    try {
+      setIsLoading(true);
+      await onConfirm();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const { service, professional, date, time } = bookingData;
@@ -113,7 +116,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ bookingData, 
         <h3 className="text-lg font-semibold text-bolt-neutral-900 mb-4">Observações (opcional)</h3> {/* RENOMEADO AQUI */}
         <textarea
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={(e) => onNotesChange(e.target.value)}
           placeholder="Alguma observação especial para o profissional?"
           className="w-full p-4 border border-bolt-neutral-300 rounded-xl input-focus resize-none" // RENOMEADO AQUI
           rows={3}
@@ -122,7 +125,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ bookingData, 
 
       {/* Botão de confirmação */}
       <button
-        onClick={handleConfirm}
+        onClick={() => void handleConfirm()}
         disabled={isLoading}
         className="w-full btn-primary text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
       >

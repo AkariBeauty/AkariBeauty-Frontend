@@ -8,6 +8,7 @@ export interface Servico {
   valorBase: number;
   categoriaServicoId: number;
   empresaId: number;
+  tempo?: number;
   categoriaServico?: CategoriaServico;
   empresa?: {
     id: number;

@@ -1,8 +1,11 @@
 // src/pages/Client/Booking/steps/DateTimeSelection.tsx
-import React, { useMemo, useState } from 'react';
-import { format, addDays, isSameDay, isToday, isBefore } from 'date-fns';
+import React, { useEffect, useMemo, useState } from 'react';
+import { format, addDays, isSameDay, isToday } from 'date-fns';
 import { Calendar, Clock } from '@phosphor-icons/react';
-import { Service, Professional } from '../../../../types'; // Verifique o caminho aqui
+import { Service, Professional } from '../../../../types';
+import { availabilityService, type AvailabilityDay } from '../../../../services/availabilityService';
+import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
+import { showError } from '../../../../utils/toast';
 
 interface DateTimeSelectionProps {
   selectedService: Service;
@@ -17,8 +20,10 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
+  const [availability, setAvailability] = useState<AvailabilityDay[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
-  // Gerar próximos 14 dias
   const generateDates = () => {
     const dates = [];
     const today = new Date();
@@ -27,29 +32,64 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
     }
     return dates;
   };
-
-  // Horários disponíveis (simulado - conectar com sua API)
-  const availableTimes = [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'
-  ];
   const dates = generateDates();
 
-  const now = useMemo(() => new Date(), []);
+  const availabilityMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    availability.forEach((day) => {
+      map.set(day.date, day.slots);
+    });
+    return map;
+  }, [availability]);
 
-  const isTimeDisabled = (time: string) => {
-    if (!selectedDate) return false;
-    if (!isToday(selectedDate)) return false;
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!selectedService?.id) return;
+      try {
+        setIsLoading(true);
+        setHasError(false);
+        const today = new Date();
+        const startDate = format(today, 'yyyy-MM-dd');
+        const endDate = format(addDays(today, 13), 'yyyy-MM-dd');
 
-    const [hours, minutes] = time.split(':').map(Number);
-    const candidate = new Date(selectedDate);
-    candidate.setHours(hours, minutes, 0, 0);
-    return candidate <= now;
+        const data = await availabilityService.fetch({
+          servicoId: selectedService.id,
+          profissionalId: selectedProfessional?.id,
+          startDate,
+          endDate,
+        });
+
+        const availableKeys = new Set(data.map((day) => day.date));
+        setAvailability(data);
+        setSelectedDate((prev) => {
+          if (!prev) return null;
+          const key = format(prev, 'yyyy-MM-dd');
+          return availableKeys.has(key) ? prev : null;
+        });
+        setSelectedTime('');
+      } catch (error) {
+        console.error('Erro ao carregar disponibilidade', error);
+        showError('Falha ao carregar horários disponíveis.');
+        setHasError(true);
+        setAvailability([]);
+        setSelectedDate(null);
+        setSelectedTime('');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void fetchAvailability();
+  }, [selectedService.id, selectedProfessional?.id]);
+
+  const hasAvailabilityForDate = (date: Date) => {
+    const key = format(date, 'yyyy-MM-dd');
+    return availabilityMap.has(key);
   };
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    setSelectedTime(''); // Reset time when date changes
+    setSelectedTime('');
   };
 
   const handleTimeSelect = (time: string) => {
@@ -60,25 +100,59 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
   };
 
   const isDateDisabled = (date: Date) => {
-    // Desabilitar domingos e datas passadas (um dia antes do dia atual)
-    return date.getDay() === 0 || isBefore(date, new Date(new Date().setHours(0,0,0,0)));
+    if (date.getDay() === 0) return true;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today || !hasAvailabilityForDate(date);
   };
+
+  const slotsForSelectedDate = useMemo(() => {
+    if (!selectedDate) return [];
+    const key = format(selectedDate, 'yyyy-MM-dd');
+    return availabilityMap.get(key) ?? [];
+  }, [availabilityMap, selectedDate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <LoadingSpinner size="lg" />
+        <p className="mt-3 text-bolt-neutral-500">Carregando disponibilidade...</p>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="text-center py-10 text-bolt-neutral-500">
+        <p className="mb-2">Não foi possível carregar os horários disponíveis.</p>
+        <p className="text-sm">Tente novamente mais tarde.</p>
+      </div>
+    );
+  }
+
+  if (availability.length === 0) {
+    return (
+      <div className="text-center py-10 text-bolt-neutral-500">
+        <p className="mb-2">Nenhum horário está disponível para este serviço nos próximos dias.</p>
+        <p className="text-sm">Selecione outro profissional ou ajuste o período.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-bolt-neutral-900 mb-2">Escolha data e horário</h2> {/* RENOMEADO AQUI */}
-        <div className="text-sm text-bolt-neutral-600"> {/* RENOMEADO AQUI */}
+        <h2 className="text-2xl font-bold text-bolt-neutral-900 mb-2">Escolha data e horário</h2>
+        <div className="text-sm text-bolt-neutral-600">
           <p><span className="font-medium">{selectedService.name}</span> com <span className="font-medium">{selectedProfessional.name}</span></p>
           <p>Duração: {selectedService.duration} minutos</p>
         </div>
       </div>
 
-      {/* Seleção de Data */}
       <div className="bg-white rounded-2xl p-6 shadow-sm">
         <div className="flex items-center mb-4">
-          <Calendar size={20} className="text-bolt-primary-600 mr-2" /> {/* RENOMEADO AQUI */}
-          <h3 className="text-lg font-semibold text-bolt-neutral-900">Selecione a data</h3> {/* RENOMEADO AQUI */}
+          <Calendar size={20} className="text-bolt-primary-600 mr-2" />
+          <h3 className="text-lg font-semibold text-bolt-neutral-900">Selecione a data</h3>
         </div>
 
         <div className="grid grid-cols-7 gap-2">
@@ -93,10 +167,10 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
                 disabled={isDisabled}
                 className={`p-3 rounded-xl text-center transition-all ${
                   isDisabled
-                    ? 'bg-bolt-neutral-100 text-bolt-neutral-400 cursor-not-allowed' // RENOMEADO AQUI
+                    ? 'bg-bolt-neutral-100 text-bolt-neutral-400 cursor-not-allowed'
                     : isSelected
-                    ? 'bg-gradient-to-br from-bolt-primary-500 to-bolt-secondary-500 text-white shadow-lg' // RENOMEADO AQUI
-                    : 'bg-bolt-neutral-50 text-bolt-neutral-700 hover:bg-bolt-primary-50 hover:text-bolt-primary-700' // RENOMEADO AQUI
+                    ? 'bg-gradient-to-br from-bolt-primary-500 to-bolt-secondary-500 text-white shadow-lg'
+                    : 'bg-bolt-neutral-50 text-bolt-neutral-700 hover:bg-bolt-primary-50 hover:text-bolt-primary-700'
                 }`}
               >
                 <div className="text-xs font-medium">
@@ -106,7 +180,7 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
                   {format(date, 'd')}
                 </div>
                 {isToday(date) && (
-                  <div className="text-xs text-bolt-primary-600 font-medium">Hoje</div> // RENOMEADO AQUI
+                  <div className="text-xs text-bolt-primary-600 font-medium">Hoje</div>
                 )}
               </button>
             );
@@ -114,72 +188,70 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
         </div>
       </div>
 
-      {/* Seleção de Horário */}
       {selectedDate && (
         <div className="bg-white rounded-2xl p-6 shadow-sm animate-slide-up">
           <div className="flex items-center mb-4">
-            <Clock size={20} className="text-bolt-primary-600 mr-2" /> {/* RENOMEADO AQUI */}
-            <h3 className="text-lg font-semibold text-bolt-neutral-900">Selecione o horário</h3> {/* RENOMEADO AQUI */}
+            <Clock size={20} className="text-bolt-primary-600 mr-2" />
+            <h3 className="text-lg font-semibold text-bolt-neutral-900">Selecione o horário</h3>
           </div>
 
-          <div className="text-sm text-bolt-neutral-600 mb-4"> {/* RENOMEADO AQUI */}
+          <div className="text-sm text-bolt-neutral-600 mb-4">
             {format(selectedDate, "EEEE, d 'de' MMMM")}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            {availableTimes.map((time) => {
-              const disabled = isTimeDisabled(time);
-              return (
+          {slotsForSelectedDate.length === 0 ? (
+            <div className="text-center text-sm text-bolt-neutral-500">
+              Nenhum horário disponível neste dia.
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {slotsForSelectedDate.map((time) => (
                 <button
                   key={time}
-                  onClick={() => !disabled && handleTimeSelect(time)}
-                  disabled={disabled}
+                  onClick={() => handleTimeSelect(time)}
                   className={`p-3 rounded-xl text-center font-medium transition-all ${
-                    disabled
-                      ? 'bg-bolt-neutral-100 text-bolt-neutral-400 cursor-not-allowed'
-                      : selectedTime === time
+                    selectedTime === time
                       ? 'bg-gradient-to-br from-bolt-primary-500 to-bolt-secondary-500 text-white shadow-lg'
                       : 'bg-bolt-neutral-50 text-bolt-neutral-700 hover:bg-bolt-primary-50 hover:text-bolt-primary-700'
                   }`}
                 >
                   {time}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Resumo */}
       {selectedDate && selectedTime && (
-        <div className="bg-gradient-to-br from-bolt-primary-50 to-bolt-secondary-50 rounded-2xl p-6 animate-slide-up"> {/* RENOMEADO AQUI */}
-          <h3 className="font-semibold text-bolt-neutral-900 mb-3">Resumo do agendamento</h3> {/* RENOMEADO AQUI */}
+        <div className="bg-gradient-to-br from-bolt-primary-50 to-bolt-secondary-50 rounded-2xl p-6 animate-slide-up">
+          <h3 className="font-semibold text-bolt-neutral-900 mb-3">Resumo do agendamento</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-bolt-neutral-600">Serviço:</span> {/* RENOMEADO AQUI */}
+              <span className="text-bolt-neutral-600">Serviço:</span>
               <span className="font-medium">{selectedService.name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-bolt-neutral-600">Profissional:</span> {/* RENOMEADO AQUI */}
+              <span className="text-bolt-neutral-600">Profissional:</span>
               <span className="font-medium">{selectedProfessional.name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-bolt-neutral-600">Data:</span> {/* RENOMEADO AQUI */}
+              <span className="text-bolt-neutral-600">Data:</span>
               <span className="font-medium">
                 {format(selectedDate, "d 'de' MMMM")}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-bolt-neutral-600">Horário:</span> {/* RENOMEADO AQUI */}
+              <span className="text-bolt-neutral-600">Horário:</span>
               <span className="font-medium">{selectedTime}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-bolt-neutral-600">Duração:</span> {/* RENOMEADO AQUI */}
+              <span className="text-bolt-neutral-600">Duração:</span>
               <span className="font-medium">{selectedService.duration} min</span>
             </div>
-            <div className="flex justify-between border-t border-bolt-neutral-200 pt-2 mt-3"> {/* RENOMEADO AQUI */}
-              <span className="text-bolt-neutral-600">Valor:</span> {/* RENOMEADO AQUI */}
-              <span className="font-bold text-lg text-bolt-primary-600">R$ {selectedService.price}</span> {/* RENOMEADO AQUI */}
+            <div className="flex justify-between border-t border-bolt-neutral-200 pt-2 mt-3">
+              <span className="text-bolt-neutral-600">Valor:</span>
+              <span className="font-bold text-lg text-bolt-primary-600">R$ {selectedService.price}</span>
             </div>
           </div>
         </div>

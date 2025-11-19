@@ -116,6 +116,7 @@ export default function MeusAgendamentos() {
   const filteredAppointments = useMemo(() => {
     const start = startDate ? new Date(`${startDate}T00:00:00`).getTime() : null;
     const end = endDate ? new Date(`${endDate}T23:59:59`).getTime() : null;
+    const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return appointments
       .filter((item) => {
@@ -123,10 +124,11 @@ export default function MeusAgendamentos() {
           statusFilter === "TODOS" || item.status === statusFilter;
 
         const matchesSearch =
-          searchTerm.trim().length === 0 ||
+          normalizedSearch.length === 0 ||
           item.servicos.some((service) =>
-            service.nome.toLowerCase().includes(searchTerm.toLowerCase())
-          );
+            service.nome.toLowerCase().includes(normalizedSearch)
+          ) ||
+          (item.profissional?.nome?.toLowerCase().includes(normalizedSearch) ?? false);
 
         const appointmentTime = new Date(item.dataHora).getTime();
         const matchesStart = start === null || appointmentTime >= start;
@@ -366,6 +368,8 @@ export default function MeusAgendamentos() {
                   const statusClass = statusStyles[appointment.status] ?? "bg-bolt-neutral-100 text-bolt-neutral-600";
                   const canCancel =
                     appointment.status === "PENDENTE" || appointment.status === "CONFIRMADO";
+                  const professionalName = appointment.profissional?.nome;
+                  const observation = appointment.observacao?.trim();
 
                   return (
                     <tr key={appointment.id} className="hover:bg-bolt-neutral-50 transition-colors">
@@ -375,6 +379,12 @@ export default function MeusAgendamentos() {
                         <div className="text-xs text-bolt-neutral-400">
                           {appointment.servicos.length} serviço(s)
                         </div>
+                        {professionalName ? (
+                          <div className="text-xs text-bolt-neutral-400">Profissional: {professionalName}</div>
+                        ) : null}
+                        {observation ? (
+                          <div className="text-xs text-bolt-neutral-400 truncate max-w-xs">Obs.: {observation}</div>
+                        ) : null}
                       </td>
                       <td className="px-6 py-4 text-sm">{formattedDate}</td>
                       <td className="px-6 py-4">

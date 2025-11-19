@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import InputLogin from "../../components/InputLogin";
 import { User, Envelope, Key, Phone, MapPin } from "@phosphor-icons/react";
 import BaseService from "../../services/Generic/BaseService";
-import AlertModal from "../../components/AlertModal";
+import { showError, showSuccess } from "../../utils/toast";
 
 export default function SingupCliente() {
   const navigate = useNavigate();
@@ -23,10 +23,6 @@ export default function SingupCliente() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [modalError, setModalError] = useState(false);
-  const [modalSuccess, setModalSuccess] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const handleInputChange = (field: string) => (value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -35,10 +31,6 @@ export default function SingupCliente() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setModalError(false);
-    setModalSuccess(false);
-    setErrorMessage("");
-    setSuccessMessage("");
 
     try {
       const service = new BaseService({
@@ -60,16 +52,14 @@ export default function SingupCliente() {
       });
 
       await service.request<void>(); // axios lança se ocorrer erro
-      setSuccessMessage("Cliente cadastrado com sucesso! Redirecionando para login...");
-      setModalSuccess(true);
-      setTimeout(() => navigate("/login"), 1600);
+      showSuccess("Cliente cadastrado com sucesso! Redirecionando para login...");
+      window.location.reload();
     } catch (error: any) {
       const msg =
         error?.response?.data?.message ||
         error?.response?.data ||
         "Erro ao cadastrar cliente. Tente novamente.";
-      setErrorMessage(String(msg));
-      setModalError(true);
+      showError(String(msg));
     } finally {
       setIsLoading(false);
     }
@@ -113,8 +103,6 @@ export default function SingupCliente() {
         </div>
       </form>
 
-      <AlertModal isOpen={modalError} show={setModalError} message={errorMessage} />
-      <AlertModal isOpen={modalSuccess} show={setModalSuccess} message={successMessage} />
     </div>
   );
 }

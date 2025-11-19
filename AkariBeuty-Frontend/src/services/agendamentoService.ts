@@ -29,12 +29,19 @@ export type Agendamento = {
   valor: number;
   comissao: number;
   servicos: AgendamentoServico[];
+  profissional?: {
+    id: number;
+    nome: string;
+    telefone?: string | null;
+  } | null;
+  profissionalId?: number | null;
   observacao?: string | null;
 };
 
 type CriarAgendamentoPayload = {
   clienteId: number;
   servicoId: number;
+  profissionalId: number;
   dataHora: string;
   observacao?: string;
 };
@@ -53,6 +60,7 @@ export const AgendamentoService = {
     return response.map((item) => ({
       ...item,
       dataHora: String(item.dataHora),
+      profissionalId: item.profissional?.id ?? null,
     }));
   },
 

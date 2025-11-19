@@ -20,6 +20,7 @@ export default function BookingWizard() {
   const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
   const [date, setDate] = useState<string>("");
   const [time, setTime] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
 
   const clienteId = useMemo(() => {
     if (!user?.id) return 0;
@@ -32,7 +33,7 @@ export default function BookingWizard() {
     professional: selectedProfessional ?? undefined,
     date: date || undefined,
     time: time || undefined,
-    notes: undefined,
+    notes: notes || undefined,
   };
 
   const goNext = () => setStepIndex((prev) => Math.min(prev + 1, steps.length - 1));
@@ -41,11 +42,16 @@ export default function BookingWizard() {
   const handleServiceSelect = (service: Service) => {
     setSelectedService(service);
     setSelectedProfessional(null);
+    setDate("");
+    setTime("");
+    setNotes("");
     goNext();
   };
 
   const handleProfessionalSelect = (professional: Professional) => {
     setSelectedProfessional(professional);
+    setDate("");
+    setTime("");
     goNext();
   };
 
@@ -63,7 +69,7 @@ export default function BookingWizard() {
       return;
     }
 
-    if (!selectedService || !date || !time) {
+    if (!selectedService || !selectedProfessional || !date || !time) {
       showError("Informe serviço, profissional, data e horário antes de confirmar.");
       return;
     }
@@ -80,11 +86,13 @@ export default function BookingWizard() {
       await AgendamentoService.criar({
         clienteId,
         servicoId: Number(selectedService.id),
+        profissionalId: Number(selectedProfessional.id),
         dataHora: iso,
-        observacao: undefined,
+        observacao: notes.trim() ? notes.trim() : undefined,
       });
 
       showSuccess("Agendamento criado com sucesso!");
+      setNotes("");
       navigate("/cliente/agendamentos");
     } catch (error) {
       console.error("Erro ao criar agendamento", error);
@@ -118,7 +126,14 @@ export default function BookingWizard() {
           />
         );
       case 3:
-        return <BookingConfirmation bookingData={bookingData} onConfirm={handleConfirm} />;
+        return (
+          <BookingConfirmation
+            bookingData={bookingData}
+            notes={notes}
+            onNotesChange={setNotes}
+            onConfirm={handleConfirm}
+          />
+        );
       default:
         return null;
     }

@@ -21,6 +21,7 @@ export interface Service {
 export interface Professional {
   id: number;
   name: string;
+  serviceIds?: number[];
   specialties: string[];
   rating: number;
   avatar?: string;

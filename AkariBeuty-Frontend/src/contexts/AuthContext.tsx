@@ -27,9 +27,19 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   type DecodedToken = {
     identifier?: string;
+    clienteId?: string;
+    sub?: string;
     type?: string;
+    name?: string;
+    email?: string;
     [key: string]: unknown;
   };
+
+  const resolveIdentifier = useCallback((decoded?: DecodedToken | null) => {
+    if (!decoded) return "";
+    const candidate = decoded.clienteId ?? decoded.identifier ?? decoded.sub;
+    return typeof candidate === "string" ? candidate : String(candidate ?? "");
+  }, []);
 
   const decodeToken = useCallback((token: string): DecodedToken | null => {
     try {
@@ -53,19 +63,21 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         let parsedUser = JSON.parse(savedUser) as User;
         if ((!parsedUser?.id || parsedUser.id === "") && token) {
           const decoded = decodeToken(token);
-          if (decoded?.identifier) {
-            parsedUser = { ...parsedUser, id: decoded.identifier };
+          const identifier = resolveIdentifier(decoded);
+          if (identifier) {
+            parsedUser = { ...parsedUser, id: identifier };
             localStorage.setItem("akari_user", JSON.stringify(parsedUser));
           }
         }
         setUser(parsedUser);
       } else if (token) {
         const decoded = decodeToken(token);
-        if (decoded?.identifier) {
+        const identifier = resolveIdentifier(decoded);
+        if (identifier) {
           const fallbackUser: User = {
-            id: decoded.identifier,
-            name: "Cliente",
-            email: "",
+            id: identifier,
+            name: (decoded?.name as string) ?? "Cliente",
+            email: (decoded?.email as string) ?? "",
             phone: "",
             token,
           };
@@ -79,7 +91,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [decodeToken]);
+  }, [decodeToken, resolveIdentifier]);
 
   async function login(email: string, password: string): Promise<boolean> {
     try {
@@ -94,10 +106,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
       localStorage.setItem("akari_token", token);
       const decoded = decodeToken(token);
+      const identifier = resolveIdentifier(decoded);
       const loggedUser: User = {
-        id: decoded?.identifier ?? "",
-        name: decoded?.type ?? email,
-        email,
+        id: identifier,
+        name: (decoded?.name as string) ?? (decoded?.type as string) ?? email,
+        email: (decoded?.email as string) ?? email,
         phone: "",
         token,
       };

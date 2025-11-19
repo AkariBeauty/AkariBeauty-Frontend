@@ -6,10 +6,18 @@ import BaseService from "./Generic/BaseService";
  *  ========================= */
 export type Cliente = {
   id: number | string;
-  name: string;
+  name?: string;
+  nome?: string;
   document?: string;
-  email: string;
+  cpf?: string;
+  email?: string;
   phone?: string;
+  telefone?: string;
+  uf?: string;
+  cidade?: string;
+  bairro?: string;
+  rua?: string;
+  numero?: number;
   active?: boolean;
 };
 
@@ -267,22 +275,35 @@ async function cancelAppointment(id: number | string): Promise<void> {
  *  Perfil (dados e overview)
  *  ========================= */
 async function getProfile(): Promise<ClienteProfile> {
-  return getWithFallback<ClienteProfile>(["cliente/profile", "clientes/profile"]);
+  return getWithFallback<ClienteProfile>([
+    "cliente/perfil",
+    "clientes/perfil",
+    "cliente/profile",
+    "clientes/profile",
+  ]);
 }
 
 async function updateProfile(data: Partial<ClienteProfile>): Promise<void> {
   await mutateWithFallback<void>([
+    { url: "cliente/perfil", data, method: "patch" },
+    { url: "clientes/perfil", data, method: "patch" },
     { url: "cliente/profile", data, method: "put" },
     { url: "clientes/profile", data, method: "put" },
   ]);
 }
 
 async function getProfileStats(): Promise<ClienteProfileStats> {
-  return getWithFallback<ClienteProfileStats>([
-    "cliente/profile/stats",
-    "clientes/profile/stats",
-    "profile/stats",
-  ]);
+  // Mantido por compatibilidade; caso a API ainda não exponha o endpoint, evita 404.
+  return Promise.resolve({
+    id: 0,
+    name: "",
+    email: "",
+    phone: "",
+    memberSince: new Date().toISOString(),
+    totalAppointments: 0,
+    favoriteServices: [],
+    averageRating: 0,
+  });
 }
 
 async function changePassword(payload: { currentPassword: string; newPassword: string }): Promise<void> {
