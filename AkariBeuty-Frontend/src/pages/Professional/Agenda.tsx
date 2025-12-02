@@ -13,7 +13,7 @@ const STATUS_COLORS: Record<string, string> = {
   COBRADO: "bg-violet-100 text-violet-700",
   AUSENTE: "bg-gray-200 text-gray-700",
 };
-
+//a
 const STATUS_CODES: Record<keyof typeof STATUS_COLORS, number> = {
   PENDENTE: 1,
   CONFIRMADO: 2,
