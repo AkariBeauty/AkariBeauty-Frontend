@@ -5,7 +5,7 @@ import BaseService from "../services/Generic/BaseService";
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, options?: { type?: "cliente" | "profissional" | "empresa" | "usuario" }) => Promise<boolean>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   isLoading: boolean;
@@ -28,17 +28,26 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   type DecodedToken = {
     identifier?: string;
     clienteId?: string;
+    empresaId?: string;
+    profissionalId?: string;
     sub?: string;
     type?: string;
     name?: string;
     email?: string;
+    role?: string;
     [key: string]: unknown;
   };
 
   const resolveIdentifier = useCallback((decoded?: DecodedToken | null) => {
     if (!decoded) return "";
-    const candidate = decoded.clienteId ?? decoded.identifier ?? decoded.sub;
+    const candidate = decoded.profissionalId ?? decoded.clienteId ?? decoded.identifier ?? decoded.sub;
     return typeof candidate === "string" ? candidate : String(candidate ?? "");
+  }, []);
+
+  const resolveRole = useCallback((decoded?: DecodedToken | null) => {
+    if (!decoded) return undefined;
+    const roleClaim = decoded.role ?? (decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] as string | undefined);
+    return roleClaim;
   }, []);
 
   const decodeToken = useCallback((token: string): DecodedToken | null => {
@@ -69,7 +78,18 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             localStorage.setItem("akari_user", JSON.stringify(parsedUser));
           }
         }
-        setUser(parsedUser);
+        const decoded = token ? decodeToken(token) : null;
+        const identifier = resolveIdentifier(decoded);
+        const role = resolveRole(decoded) ?? parsedUser.role;
+        const mergedUser: User = {
+          ...parsedUser,
+          id: identifier || parsedUser.id,
+          role: role ?? parsedUser.role,
+          clienteId: decoded?.clienteId as string | undefined,
+          empresaId: decoded?.empresaId as string | undefined,
+        };
+        setUser(mergedUser);
+        localStorage.setItem("akari_user", JSON.stringify(mergedUser));
       } else if (token) {
         const decoded = decodeToken(token);
         const identifier = resolveIdentifier(decoded);
@@ -79,6 +99,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             name: (decoded?.name as string) ?? "Cliente",
             email: (decoded?.email as string) ?? "",
             phone: "",
+            role: resolveRole(decoded),
+            clienteId: decoded?.clienteId as string | undefined,
+            empresaId: decoded?.empresaId as string | undefined,
             token,
           };
           setUser(fallbackUser);
@@ -93,25 +116,45 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
   }, [decodeToken, resolveIdentifier]);
 
-  async function login(email: string, password: string): Promise<boolean> {
+  async function login(email: string, password: string, options?: { type?: "cliente" | "profissional" | "empresa" | "usuario" }): Promise<boolean> {
+    const targetType = options?.type ?? "cliente";
     try {
-      const service = new BaseService({
-        method: "post",
-        url: "cliente/login",
-        data: { login: email, password },
-        auth: false,
-      });
-      const { token } = await service.request<{ token: string }>();
+      let token: string | undefined;
+
+      if (targetType === "cliente") {
+        const service = new BaseService({
+          method: "post",
+          url: "cliente/login",
+          data: { login: email, password },
+          auth: false,
+        });
+        const response = await service.request<{ token: string }>();
+        token = response.token;
+      } else {
+        const service = new BaseService({
+          method: "patch",
+          url: `${targetType}/login`,
+          data: { login: email, password },
+          auth: false,
+        });
+        const response = await service.request<{ token: string }>();
+        token = response.token;
+      }
+
       if (!token) throw new Error("Token ausente");
 
       localStorage.setItem("akari_token", token);
       const decoded = decodeToken(token);
       const identifier = resolveIdentifier(decoded);
+      const role = resolveRole(decoded) ?? targetType;
       const loggedUser: User = {
         id: identifier,
         name: (decoded?.name as string) ?? (decoded?.type as string) ?? email,
         email: (decoded?.email as string) ?? email,
         phone: "",
+        role,
+        clienteId: decoded?.clienteId as string | undefined,
+        empresaId: decoded?.empresaId as string | undefined,
         token,
       };
       localStorage.setItem("akari_user", JSON.stringify(loggedUser));

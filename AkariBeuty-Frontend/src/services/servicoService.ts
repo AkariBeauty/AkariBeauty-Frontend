@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { GenericService, createService } from './Generic/GenericService';
+import { createService } from './Generic/GenericService';
 
 export interface Servico {
   id: number;

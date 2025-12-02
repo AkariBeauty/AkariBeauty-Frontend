@@ -11,6 +11,8 @@ export type Cliente = {
   document?: string;
   cpf?: string;
   email?: string;
+  login?: string;
+  senha?: string;
   phone?: string;
   telefone?: string;
   uf?: string;

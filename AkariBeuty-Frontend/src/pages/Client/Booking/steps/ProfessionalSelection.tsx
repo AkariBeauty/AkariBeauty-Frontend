@@ -13,14 +13,17 @@ interface ProfessionalSelectionProps {
 const BLOCKED_KEYWORDS = ['administrador', 'funcionário', 'funcionario', 'recepcionista'];
 
 const mapApiToProfessional = (item: ProfissionalApi, fallbackService: string): Professional => {
-  const specialties = item.profissionalServicos?.map((entry) => entry.servico?.servicoPrestado).filter(Boolean) ?? [];
+  const specialties = item.profissionalServicos
+    ?.map((entry) => entry.servico?.servicoPrestado)
+    .filter((nome): nome is string => typeof nome === 'string' && nome.trim().length > 0)
+    ?? [];
   const serviceIds = item.profissionalServicos?.map((entry) => entry.servicoId).filter((id): id is number => typeof id === 'number') ?? [];
 
   return {
     id: item.id,
     name: item.nome,
     serviceIds,
-    specialties: specialties.length ? specialties : [fallbackService],
+    specialties: specialties.length ? specialties : [fallbackService || 'Serviço'],
     rating: Number(item.rating ?? 0),
     avatar: undefined,
     bio: item.telefone ? `Contato: ${item.telefone}` : 'Profissional disponível para este serviço.',

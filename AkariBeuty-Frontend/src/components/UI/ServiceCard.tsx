@@ -33,7 +33,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ servico, onSelect }) => {
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <h3 className="text-xl font-bold text-bolt-neutral-800 mb-2">
-              {servico.nome}
+              {servico.servicoPrestado}
             </h3>
             <p className="text-bolt-neutral-600 text-sm leading-relaxed mb-4">
               {servico.descricao}
@@ -45,7 +45,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ servico, onSelect }) => {
           <div className="flex items-center space-x-4">
             <div className="flex items-center text-bolt-neutral-500">
               <Clock size={16} className="mr-1" />
-              <span className="text-sm">{formatDuration(servico.duracao)}</span>
+              <span className="text-sm">{formatDuration(servico.tempo ?? 0)}</span>
             </div>
             <div className="flex items-center text-bolt-yellow-600">
               <Star size={16} className="mr-1" weight="fill" />
@@ -55,7 +55,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ servico, onSelect }) => {
           
           <div className="text-right">
             <div className="text-2xl font-bold text-bolt-primary-600">
-              {formatPrice(servico.preco)}
+              {formatPrice(servico.valorBase)}
             </div>
           </div>
         </div>

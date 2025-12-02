@@ -4,6 +4,9 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  role?: string;
+  clienteId?: string;
+  empresaId?: string;
   avatar?: string;
   token?: string; // Adicionar o campo token
 }
@@ -64,4 +67,43 @@ export interface NotificationProps {
 }
 
 export type ClienteCadastroResponse = Service | Professional | string[];
+
+export interface ProfessionalAgendaItem {
+  id: number;
+  dataHora: string;
+  clienteNome: string;
+  clienteTelefone?: string;
+  servicoPrincipal: string;
+  status: string;
+  statusCodigo: number;
+  valor: number;
+  observacao?: string;
+  podeConfirmar: boolean;
+  podeConcluir: boolean;
+}
+
+export interface ProfessionalAgendaDay {
+  data: string;
+  agendamentos: ProfessionalAgendaItem[];
+}
+
+export interface ProfessionalDashboard {
+  nome: string;
+  pendentesHoje: number;
+  confirmadosHoje: number;
+  totalSemana: number;
+  canceladosSemana: number;
+  proximos: ProfessionalAgendaItem[];
+}
+
+export interface ProfessionalProfile {
+  id: number;
+  nome: string;
+  login: string;
+  telefone?: string;
+  empresaId: number;
+  empresaNome?: string;
+  status: string;
+  statusCodigo: number;
+}
 

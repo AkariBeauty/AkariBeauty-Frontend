@@ -3,12 +3,17 @@ import { Navigate, Route, Routes } from "react-router-dom";
 // Layout/Proteção (ajuste os paths se necessário no seu projeto)
 import ProtectedRoute from "./ProtectedRoute";
 import ClientLayout from "./components/Layout/ClientLayout";
+import ProfessionalLayout from "./components/Layout/ProfessionalLayout";
 
 // Páginas (ajuste os paths se o seu projeto usar outros nomes/pastas)
 import Dashboard from "./pages/Client/Dashboard";
 import Profile from "./pages/Client/Profile";
 import BookingWizard from "./pages/Client/Booking/BookingWizard";
 import Login from "./pages/Login";
+import ProfessionalDashboard from "./pages/Professional/Dashboard";
+import ProfessionalAgenda from "./pages/Professional/Agenda";
+import ProfessionalProfile from "./pages/Professional/Profile";
+import ProfessionalAppointmentDetail from "./pages/Professional/AppointmentDetail";
 
 // Clientes
 import ClientesList from "./pages/Client/ClientList";
@@ -49,6 +54,21 @@ export default function Routers() {
         {/* Agendamentos */}
         <Route path="agendamentos" element={<MeusAgendamentos />} />
         <Route path="agendamentos/novo" element={<NovoAgendamento />} />
+      </Route>
+
+      <Route
+        path="/profissional"
+        element={
+          <ProtectedRoute allowedRoles={["Profissional"]}>
+            <ProfessionalLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<ProfessionalDashboard />} />
+        <Route path="agenda" element={<ProfessionalAgenda />} />
+        <Route path="agendamentos/:id" element={<ProfessionalAppointmentDetail />} />
+        <Route path="perfil" element={<ProfessionalProfile />} />
       </Route>
 
       {/* 404 simples (opcional) */}

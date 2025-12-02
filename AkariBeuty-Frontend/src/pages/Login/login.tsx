@@ -27,11 +27,10 @@ export default function FormLogin() {
     const loginService = async () => {
         setIsLoading(true);
         try {
-            // Use AuthContext login only for cliente for now; others keep legacy path
-            if (typeUser === "cliente") {
-                const ok = await loginWithAuth(login, password);
+            if (typeUser === "cliente" || typeUser === "profissional") {
+                const ok = await loginWithAuth(login, password, { type: typeUser });
                 if (ok) {
-                    navigate("/cliente/dashboard");
+                    navigate(typeUser === "profissional" ? "/profissional/dashboard" : "/cliente/dashboard");
                     return;
                 }
                 setModalError(true);
@@ -44,10 +43,10 @@ export default function FormLogin() {
                 url: typeUser + "/login",
                 data: {
                     "login": login,
-                    "senha": password
+                    "password": password
                 },
                 auth: false,
-                headers: null
+                headers: undefined
             });
 
             const response: ApiResponse = await service.request();
