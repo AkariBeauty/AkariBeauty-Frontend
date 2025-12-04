@@ -6,7 +6,6 @@ import {
     PencilSimpleLine,
     Phone,
     ShieldCheck,
-    SignOut,
     UserCircle,
 } from "@phosphor-icons/react";
 import professionalPortalService from "../../services/professionalPortalService";

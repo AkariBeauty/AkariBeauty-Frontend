@@ -20,7 +20,8 @@ export default class BaseService {
 
   async request<T = any>(): Promise<T> {
     const { method, url, params, data, headers, auth } = this.opts;
-    const config: any = { method, url, params, data, headers, useAuth: auth !== false };
+      const config: any = { method, url, params, data, headers, useAuth: auth !== false };
+      console.log("BaseService request config:", config);
     const response = await api.request<T>(config); // axios lança erro quando não-2xx
     return response.data as T;
   }
