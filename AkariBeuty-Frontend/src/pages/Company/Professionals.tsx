@@ -12,6 +12,7 @@ import {
 } from "@phosphor-icons/react";
 import Modal from "../../components/UI/Modal";
 import { useAuth } from "../../contexts/AuthContext";
+import { useCompanySearch } from "../../contexts/CompanySearchContext";
 import companyService from "../../services/companyService";
 import professionalManagementService from "../../services/professionalManagementService";
 import type {
@@ -87,6 +88,27 @@ const buildDefaultPayload = (empresaId?: number): ProfessionalManagementPayload 
 
 const sanitizeDigits = (value: string) => value.replace(/\D/g, "");
 
+const isValidCpf = (value: string) => {
+    const digits = sanitizeDigits(value);
+    if (digits.length !== 11) return false;
+    if (digits.split("").every((digit) => digit === digits[0])) return false;
+
+    const calculateCheckDigit = (length: number) => {
+        let sum = 0;
+        for (let i = 0; i < length; i += 1) {
+            sum += Number(digits[i]) * (length + 1 - i);
+        }
+        const remainder = sum % 11;
+        return remainder < 2 ? 0 : 11 - remainder;
+    };
+
+    const firstDigit = calculateCheckDigit(9);
+    if (firstDigit !== Number(digits[9])) return false;
+
+    const secondDigit = calculateCheckDigit(10);
+    return secondDigit === Number(digits[10]);
+};
+
 const normalizeProfessionalPayload = (
     payload: ProfessionalManagementPayload
 ): ProfessionalManagementPayload => ({
@@ -108,6 +130,10 @@ const validateProfessionalPayload = (
     const cpfDigits = payload.cpf;
     if (cpfDigits.length !== 11 || cpfDigits.split("").every((digit) => digit === cpfDigits[0])) {
         return "CPF inválido. Digite 11 dígitos válidos.";
+    }
+
+    if (!isValidCpf(cpfDigits)) {
+        return "CPF inválido. Informe um CPF válido.";
     }
 
     const phoneDigits = payload.telefone;
@@ -147,6 +173,7 @@ const validateProfessionalPayload = (
 export default function CompanyProfessionalsPage() {
     const { user, isLoading: authLoading } = useAuth();
     const empresaId = useMemo(() => resolveEmpresaIdFromUser(user), [user]);
+    const { query: globalSearch } = useCompanySearch();
 
     const [professionals, setProfessionals] = useState<ProfessionalManagementRecord[]>([]);
     const [services, setServices] = useState<CompanyServiceCatalogItem[]>([]);
@@ -253,17 +280,17 @@ export default function CompanyProfessionalsPage() {
     }, [professionals]);
 
     const filteredProfessionals = useMemo(() => {
-        const term = search.trim().toLowerCase();
-        if (!term) return professionals;
+        const mergedTerm = (search || globalSearch).trim().toLowerCase();
+        if (!mergedTerm) return professionals;
         return professionals.filter((item) => {
             return (
-                item.nome.toLowerCase().includes(term) ||
-                item.cpf.toLowerCase().includes(term) ||
-                item.login.toLowerCase().includes(term) ||
-                item.telefone.toLowerCase().includes(term)
+                item.nome.toLowerCase().includes(mergedTerm) ||
+                item.cpf.toLowerCase().includes(mergedTerm) ||
+                item.login.toLowerCase().includes(mergedTerm) ||
+                item.telefone.toLowerCase().includes(mergedTerm)
             );
         });
-    }, [professionals, search]);
+    }, [professionals, search, globalSearch]);
 
     const statusDistribution = useMemo(() => {
         return professionals.reduce(

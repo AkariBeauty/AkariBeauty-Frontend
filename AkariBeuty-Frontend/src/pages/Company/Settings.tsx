@@ -5,6 +5,7 @@ import type { CompanySettingsData } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
 import { resolveEmpresaIdFromUser } from "../../utils/company";
 import { CompanyPageHeader, companyCardClass } from "./layout";
+import { ensureBusinessHoursString } from "../../utils/time";
 
 export default function CompanySettingsPage() {
     const { user, isLoading: authLoading } = useAuth();
@@ -179,7 +180,9 @@ export default function CompanySettingsPage() {
                 <article className={`${companyCardClass} space-y-3`}>
                     <p className="text-sm font-semibold text-bolt-neutral-900">Horários</p>
                     <ul className="space-y-2 text-sm text-bolt-neutral-600">
-                        <li>Seg a Sex: {data.hours.segundaSexta}</li>
+                        <li>
+                            Seg a Sex: {ensureBusinessHoursString(data.hours.segundaSexta)}
+                        </li>
                         <li>Sábado: {data.hours.sabado}</li>
                         <li>Domingo: {data.hours.domingo}</li>
                     </ul>

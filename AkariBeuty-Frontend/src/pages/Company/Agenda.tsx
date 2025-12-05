@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarDots, Export, ListChecks } from "@phosphor-icons/react";
 import companyService from "../../services/companyService";
 import type { CompanyAgendaResponse } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
 import { resolveEmpresaIdFromUser } from "../../utils/company";
 import { CompanyPageHeader, companyCardClass } from "./layout";
+import { isWithinBusinessWindow } from "../../utils/time";
 
 export default function CompanyAgendaPage() {
     const { user, isLoading: authLoading } = useAuth();
@@ -33,6 +34,13 @@ export default function CompanyAgendaPage() {
         };
         void load();
     }, [authLoading, user]);
+
+    const filteredSlots = useMemo(() => {
+        if (!data?.slots) return [];
+        return data.slots.filter((slot) =>
+            isWithinBusinessWindow(slot.start, slot.end)
+        );
+    }, [data]);
 
     if (loading || !data) {
         if (error) {
@@ -107,7 +115,7 @@ export default function CompanyAgendaPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {data.slots.map((slot) => (
+                            {filteredSlots.map((slot) => (
                                 <tr key={slot.id} className="border-t border-bolt-primary-50">
                                     <td className="px-4 py-3 text-bolt-neutral-900">{slot.date}</td>
                                     <td className="px-4 py-3">

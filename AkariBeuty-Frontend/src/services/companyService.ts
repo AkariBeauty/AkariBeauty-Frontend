@@ -1,5 +1,5 @@
 import BaseService from "./Generic/BaseService";
-import { servicoService } from "./servicoService";
+import { servicoService, getCategoriaDisplayName } from "./servicoService";
 import type { Servico } from "./servicoService";
 import type {
     CompanyAgendaResponse,
@@ -36,7 +36,7 @@ const formatCurrencyValue = (value: string | number | null | undefined) => {
 const mapServicoToCatalogItem = (servico: Servico): CompanyServiceCatalogItem => ({
     id: servico.id,
     name: servico.servicoPrestado ?? `Serviço #${servico.id}`,
-    category: servico.categoriaServico?.nome ?? "Serviço",
+    category: getCategoriaDisplayName(servico.categoriaServico),
     price: formatCurrencyValue(servico.valorBase),
     duration: servico.tempo ? `${servico.tempo} min` : "60 min",
     status: "ativo",
