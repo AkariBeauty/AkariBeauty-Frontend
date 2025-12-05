@@ -18,10 +18,16 @@ export interface Servico {
 
 export interface CategoriaServico {
   id: number;
-  nome: string;
-  descricao: string;
-  ativo: boolean;
+  categoria?: string;
+  nome?: string;
+  descricao?: string;
+  ativo?: boolean;
 }
+
+export const getCategoriaDisplayName = (categoria?: CategoriaServico | null): string => {
+  if (!categoria) return 'Categoria';
+  return categoria.categoria ?? categoria.nome ?? `Categoria #${categoria.id}`;
+};
 
 // Criar instâncias dos serviços usando o GenericService
 const servicoGenericService = createService<Servico>('servico');

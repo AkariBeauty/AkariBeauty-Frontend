@@ -4,15 +4,9 @@ import { useState } from "react";
 import LoginTabs from "../../components/LoginTabs";
 import InputLogin from "../../components/InputLogin";
 import AlertModal from "../../components/AlertModal";
-import BaseService from "../../services/Generic/BaseService";
 import { useAuth } from "../../contexts/AuthContext";
 
 type UserType = "cliente" | "profissional" | "empresa" | "usuario" | null;
-
-interface ApiResponse {
-    success: number;
-    data: string;
-}
 
 export default function FormLogin() {
     const navigate = useNavigate();
@@ -24,46 +18,27 @@ export default function FormLogin() {
     const [modalError, setModalError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    const redirectByType: Record<Exclude<UserType, null>, string> = {
+        cliente: "/cliente/dashboard",
+        profissional: "/profissional/dashboard",
+        empresa: "/empresa/resumo",
+        usuario: "/home",
+    };
+
     const loginService = async () => {
+        if (!typeUser) return;
         setIsLoading(true);
         try {
-            if (typeUser === "cliente" || typeUser === "profissional") {
-                const ok = await loginWithAuth(login, password, { type: typeUser });
-                if (ok) {
-                    navigate(typeUser === "profissional" ? "/profissional/dashboard" : "/cliente/dashboard");
-                    return;
-                }
-                setModalError(true);
-                clearForm();
+            const ok = await loginWithAuth(login, password, { type: typeUser });
+            if (ok) {
+                const target = redirectByType[typeUser] ?? "/cliente/dashboard";
+                navigate(target);
                 return;
             }
-
-            const service = new BaseService({
-                method: "patch",
-                url: typeUser + "/login",
-                data: {
-                    "login": login,
-                    "password": password
-                },
-                auth: false,
-                headers: undefined
-            });
-
-            const response: ApiResponse = await service.request();
-            if (response.success === 200) {
-                localStorage.setItem("akari_token", response.data);
-                navigate("/home");
-                return;
-            }
-            console.log('Login falhou - resposta inválida');
             setModalError(true);
             clearForm();
         } catch (error: unknown) {
-            console.error('Erro no login:', error);
-            if (error && typeof error === 'object' && 'response' in error) {
-                const apiError = error as { response?: { status?: number, data?: unknown } };
-                console.log('Erro da API:', apiError.response);
-            }
+            console.error("Erro no login:", error);
             setModalError(true);
             clearForm();
         } finally {
@@ -77,10 +52,10 @@ export default function FormLogin() {
     };
 
     const tabs = [
-        { action: () => setTypeUser("cliente"), label: 'Cliente' },
-        { action: () => setTypeUser("profissional"), label: 'Profissional' },
-        { action: () => setTypeUser("empresa"), label: 'Empresa' },
-        { action: () => setTypeUser("usuario"), label: 'Funcionario' }
+        { action: () => setTypeUser("cliente"), label: "Cliente" },
+        { action: () => setTypeUser("profissional"), label: "Profissional" },
+        { action: () => setTypeUser("empresa"), label: "Empresa" },
+        { action: () => setTypeUser("usuario"), label: "Funcionario" },
     ];
 
     return (
@@ -98,7 +73,7 @@ export default function FormLogin() {
                 <InputLogin
                     id="login"
                     action={(text) => setLogin(text)}
-                    value={login} 
+                    value={login}
                     label="Login"
                     type="text"
                     placeholder="Seu login ou email"
@@ -112,34 +87,40 @@ export default function FormLogin() {
                     label="Senha"
                     type="password"
                     placeholder="Insira sua senha..."
-                    icon={<Key size={32} className="text-primary"/>}
+                    icon={<Key size={32} className="text-primary" />}
                 />
 
                 <div className="w-full">
-                    <a className="underline text-[16px]" href="#">Esqueci minha senha!</a>
+                    <a className="underline text-[16px]" href="#">
+                        Esqueci minha senha!
+                    </a>
                 </div>
             </div>
 
             <div className="w-full flex flex-row justify-center">
-                 <button
-                     onClick={loginService}
-                     disabled={isLoading}
-                     className="p-2.5 px-3.5 rounded-lg bg-primary text-2xl text-textSecondary font-bold cursor-pointer flex flex-row items-center disabled:opacity-50"
-                     type="button"
-                 >
-                     {isLoading ? (
-                         <>
-                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2"></div>
-                             CONECTANDO...
-                         </>
-                     ) : (
-                         <>
-                             <SignIn size={28} weight="bold" className="text-center mr-2"/> LOG IN
-                         </>
-                     )}
-                 </button>
-             </div>
-            <AlertModal isOpen={modalError} show={setModalError} message="Login ou senha inválidos!" />
+                <button
+                    onClick={loginService}
+                    disabled={isLoading}
+                    className="p-2.5 px-3.5 rounded-lg bg-primary text-2xl text-textSecondary font-bold cursor-pointer flex flex-row items-center disabled:opacity-50"
+                    type="button"
+                >
+                    {isLoading ? (
+                        <>
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2"></div>
+                            CONECTANDO...
+                        </>
+                    ) : (
+                        <>
+                            <SignIn size={28} weight="bold" className="text-center mr-2" /> LOG IN
+                        </>
+                    )}
+                </button>
+            </div>
+            <AlertModal
+                isOpen={modalError}
+                show={setModalError}
+                message="Login ou senha inválidos!"
+            />
         </div>
     );
 }
